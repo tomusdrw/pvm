@@ -2,7 +2,7 @@ import { GasCounter, gasCounter } from "./gas";
 import { INSTRUCTIONS } from "./instructions";
 import { RUN } from "./instructions-exe";
 import { Outcome, Result } from "./instructions-outcome";
-import { Memory } from "./memory";
+import { Memory, MemoryBuilder } from "./memory";
 import { BasicBlocks, JumpTable, Program, decodeArguments } from "./program";
 import { Registers } from "./registers";
 
@@ -28,7 +28,7 @@ export class Interpreter {
   constructor(program: Program, registers: Registers) {
     this.program = program;
     this.registers = registers;
-    this.memory = new Memory();
+    this.memory = new MemoryBuilder().build(0);
     this.gas = gasCounter(0);
     this.pc = 0;
     this.status = Status.OK;
