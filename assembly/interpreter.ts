@@ -96,7 +96,6 @@ export class Interpreter {
         return true;
       }
       case Outcome.StaticJump: {
-        console.log(`Static jump to ${outcome.staticJump}`);
         const branchResult = branch(this.program.basicBlocks, pc, outcome.staticJump);
         if (!branchResult.isOkay) {
           this.status = Status.PANIC;
@@ -104,7 +103,6 @@ export class Interpreter {
         }
 
         this.pc = branchResult.newPc;
-        console.log(`new pc: ${this.pc}`);
         return true;
       }
       case Outcome.Result: {
@@ -146,13 +144,10 @@ class BranchResult {
 function branch(basicBlocks: BasicBlocks, pc: u32, offset: i32): BranchResult {
   const r = new BranchResult();
   const newPc = pc + offset;
-  console.log(`Checking location: ${newPc}`);
   if (basicBlocks.isStart(newPc)) {
     r.isOkay = true;
     r.newPc = newPc;
   }
-  console.log(`isokay: ${r.isOkay}`);
-  console.log(`blcoks: ${basicBlocks.toString()}`);
   return r;
 }
 
