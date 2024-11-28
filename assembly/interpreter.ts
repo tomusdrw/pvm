@@ -25,11 +25,7 @@ export class Interpreter {
   public exitCode: u32;
   public nextPc: u32;
 
-  constructor(
-    program: Program,
-    registers: Registers,
-    memory: Memory = new MemoryBuilder().build(0)
-  ) {
+  constructor(program: Program, registers: Registers, memory: Memory = new MemoryBuilder().build(0)) {
     this.program = program;
     this.registers = registers;
     this.memory = memory;

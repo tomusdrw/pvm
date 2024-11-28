@@ -33,10 +33,10 @@ export class Decoder {
   }
 
   u32(): u32 {
-    let v  = this.source[this.offset];
-    v |= this.source[this.offset + 1] << 8;
-    v |= this.source[this.offset + 2] << 16;
-    v |= this.source[this.offset + 3] << 24;
+    let v: u32 = this.source[this.offset];
+    v |= u32(this.source[this.offset + 1]) << 8;
+    v |= u32(this.source[this.offset + 2]) << 16;
+    v |= u32(this.source[this.offset + 3]) << 24;
     this.offset += 4;
     return v;
   }

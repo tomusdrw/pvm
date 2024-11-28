@@ -119,15 +119,15 @@ function nibbles(byte: u8): Nibbles {
 
 //@inline
 function decodeI32(data: Uint8Array): u32 {
-  const len = <u8>data.length;
+  const len = <u32>data.length;
   let num = 0;
-  for (let i: u8 = 0; i < len; i++) {
-    num |= data[i] << (i * 8);
+  for (let i: u32 = 0; i < len; i++) {
+    num |= u32(data[i]) << (i * 8);
   }
 
   const msb = len > 0 ? data[len - 1] & 0x80 : 0;
   const prefix = msb > 0 ? 0xff : 0x00;
-  for (let i: u8 = len; i < 4; i++) {
+  for (let i: u32 = len; i < 4; i++) {
     num |= prefix << (i * 8);
   }
   return num;

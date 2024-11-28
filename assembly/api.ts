@@ -1,8 +1,8 @@
-import {Decoder} from "./codec";
+import { Decoder } from "./codec";
 import { Gas } from "./gas";
 import { Interpreter, Status } from "./interpreter";
-import {Memory, MemoryBuilder} from "./memory";
-import {Access} from "./memory-page";
+import { Memory, MemoryBuilder } from "./memory";
+import { Access, PAGE_SIZE } from "./memory-page";
 import { decodeProgram } from "./program";
 import { NO_OF_REGISTERS, Registers } from "./registers";
 
@@ -22,7 +22,7 @@ export function resetGenericWithMemory(
   flatRegisters: u8[],
   pageMap: Uint8Array,
   chunks: Uint8Array,
-  initialGas: Gas
+  initialGas: Gas,
 ): void {
   const p = decodeProgram(program);
   const registers: Registers = new StaticArray(NO_OF_REGISTERS);
@@ -111,9 +111,16 @@ export function getRegisters(): Uint8Array {
   return flat;
 }
 
-export function getPageDump(_index: u32): Uint8Array {
-  const page = new Uint8Array(4096).fill(0);
-  // TODO [ToDr] read from memory.
+export function getPageDump(index: u32): Uint8Array {
+  if (interpreter === null) {
+    return new Uint8Array(PAGE_SIZE).fill(0);
+  }
+  const int = <Interpreter>interpreter;
+  const page = int.memory.pageDump(index);
+  if (page === null) {
+    return new Uint8Array(PAGE_SIZE).fill(0);
+  }
+
   return page;
 }
 
@@ -147,7 +154,7 @@ function readPages(pageMap: Uint8Array): InitialPage[] {
   const pages: InitialPage[] = [];
   const codec = new Decoder(pageMap);
   while (!codec.isExhausted()) {
-    const p = new InitialPage;
+    const p = new InitialPage();
     p.address = codec.u32();
     p.length = codec.u32();
     p.access = codec.u8() > 0 ? Access.Write : Access.Read;
@@ -160,7 +167,7 @@ function readChunks(chunks: Uint8Array): InitialChunk[] {
   const res: InitialChunk[] = [];
   const codec = new Decoder(chunks);
   while (!codec.isExhausted()) {
-    const c = new InitialChunk;
+    const c = new InitialChunk();
     c.address = codec.u32();
     const len = codec.u32();
     c.data = codec.bytes(len);
@@ -170,21 +177,24 @@ function readChunks(chunks: Uint8Array): InitialChunk[] {
 }
 
 function buildMemory(pageMap: Uint8Array, flatChunks: Uint8Array): Memory {
+  console.log(`Got page: ${pageMap}`);
+  console.log(`Got chunks: ${flatChunks}`);
   const pages = readPages(pageMap);
   const chunks = readChunks(flatChunks);
 
   const builder = new MemoryBuilder();
   for (let i = 0; i < pages.length; i++) {
     const initPage = pages[i];
+    console.log(`setting page: ${initPage.address}..+${initPage.length}`);
     builder.setData(initPage.access, initPage.address, new Uint8Array(initPage.length));
   }
 
   for (let i = 0; i < chunks.length; i++) {
-    const initChunk = chunks[i]
+    const initChunk = chunks[i];
+    console.log(`setting initial chunk: ${initChunk.address}..+${initChunk.data.length}`);
     // access should not matter now, since we created the pages already.
     builder.setData(Access.None, initChunk.address, initChunk.data);
   }
 
   return builder.build(0);
 }
-

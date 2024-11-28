@@ -46,7 +46,7 @@ export class MemoryBuilder {
     const page = this.pages.get(pageIdx);
     page.raw.data.set(data, relAddress);
 
-    if (relAddress + data.length >= <u32>PAGE_SIZE) {
+    if (relAddress + data.length > <u32>PAGE_SIZE) {
       throw new Error("Unable to write data in builder. Exceeds the page!");
     }
   }
@@ -62,6 +62,13 @@ export class Memory {
     private readonly pages: Map<PageIndex, Page> = new Map(),
     private sbrkAddress: u32 = 0,
   ) {}
+
+  pageDump(index: PageIndex): Uint8Array | null {
+    if (!this.pages.has(index)) {
+      return null;
+    }
+    return this.pages.get(index).raw.data;
+  }
 
   free(): void {
     const pages = this.pages.values();
