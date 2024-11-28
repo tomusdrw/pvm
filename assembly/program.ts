@@ -102,6 +102,13 @@ export class BasicBlocks {
     this.isStartOrEnd = isStartOrEnd;
   }
 
+  isStart(newPc: u32): boolean {
+    if (newPc < <u32>this.isStartOrEnd.length) {
+      return this.isStartOrEnd[newPc] === BasicBlock.START;
+    }
+    return false;
+  }
+
   toString(): string {
     let v = 'BasicBlocks[';
     for (let i = 0; i < this.isStartOrEnd.length; i+=1) {

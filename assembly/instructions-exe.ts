@@ -1,4 +1,5 @@
 import {Args} from "./arguments";
+import {Result, OutcomeData, dJump, hostCall, ok, okOrFault, staticJump, status} from "./instructions-outcome";
 import {mulUpperSigned, mulUpperUnsigned} from "./math";
 import {Memory} from "./memory";
 import {Registers} from "./registers";
@@ -9,60 +10,7 @@ type InstructionRun = (
   args: Args,
   registers: Registers,
   memory: Memory,
-) => RunOutcome;
-
-export enum Result {
-  HALT = 0,
-  PANIC = 2 ** 32 - 12,
-  FAULT = 2 ** 32 - 13,
-  HOST = 2 ** 32 - 14,
-}
-
-@unmanaged
-export class RunOutcome {
-  staticJump: i32 | null = null;
-  dJump: u32 | null = null;
-  result: Result | null = null;
-  exitCode: u32 = 0;
-}
-
-function status(result: Result): RunOutcome {
-  const r = new RunOutcome;
-  r.result = result;
-  return r;
-}
-
-function staticJump(offset: i32): RunOutcome {
-  const r = new RunOutcome;
-  r.staticJump = offset;
-  return r;
-}
-
-function dJump(address: u32): RunOutcome {
-  const r = new RunOutcome;
-  r.dJump = address;
-  return r;
-}
-
-function ok(): RunOutcome {
-  return new RunOutcome;
-}
-
-function hostCall(id: u32) : RunOutcome {
-  const r = new RunOutcome;
-  r.result = Result.HOST;
-  r.exitCode = id;
-  return r;
-}
-
-function okOrFault(pageFault: u32 | null): RunOutcome {
-  const r = new RunOutcome;
-  if (pageFault !== null) {
-    r.result = Result.FAULT;
-    r.exitCode = pageFault;
-  }
-  return r;
-}
+) => OutcomeData;
 
 export const RUN: InstructionRun[] = [
   // TRAP
@@ -71,7 +19,7 @@ export const RUN: InstructionRun[] = [
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
     const result = memory.getU32(address);
-    if (result.fault === null) {
+    if (result.fault.isFault) {
       registers[args.b] = result.ok;
     }
     return okOrFault(result.fault);
@@ -123,7 +71,7 @@ export const RUN: InstructionRun[] = [
   // LOAD_U32
   (args, registers, memory) => {
     const result = memory.getU32(args.b);
-    if (result.fault === null) {
+    if (result.fault.isFault) {
       registers[args.a] = result.ok;
     }
     return okOrFault(result.fault);
@@ -132,7 +80,7 @@ export const RUN: InstructionRun[] = [
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
     const result = memory.getU8(address);
-    if (result.fault === null) {
+    if (result.fault.isFault) {
       registers[args.b] = result.ok;
     }
     return okOrFault(result.fault);
@@ -164,7 +112,7 @@ export const RUN: InstructionRun[] = [
   // STORE_IND_U8
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
-    const fault = memory.setU8(address, registers[args.b]);
+    const fault = memory.setU8(address, <u8>(registers[args.b] & 0xff));
     return okOrFault(fault);
   },
   // FALLTHROUGH
@@ -188,7 +136,7 @@ export const RUN: InstructionRun[] = [
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
     const result = memory.getI8(address);
-    if (result.fault === null) {
+    if (result.fault.isFault) {
       registers[args.b] = result.ok;
     }
     return okOrFault(result.fault);
@@ -219,7 +167,7 @@ export const RUN: InstructionRun[] = [
   // STORE_IMM_IND_U8
   (args, registers, memory) => {
     const address = registers[args.a] + args.b;
-    const pageFault = memory.setU8(address, args.c);
+    const pageFault = memory.setU8(address, <u8>(args.c & 0xff));
     return okOrFault(pageFault);
   },
   // SET_LT_U_IMM
@@ -235,7 +183,7 @@ export const RUN: InstructionRun[] = [
   // STORE_IND_U16
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
-    const fault = memory.setU16(address, registers[args.b]);
+    const fault = memory.setU16(address, <u16>(registers[args.b] & 0xff_ff));
     return okOrFault(fault);
   },
   // BRANCH_NE
@@ -261,7 +209,7 @@ export const RUN: InstructionRun[] = [
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
     const result = memory.getI16(address);
-    if (result.fault === null) {
+    if (result.fault.isFault) {
       registers[args.b] = result.ok;
     }
     return okOrFault(result.fault);
@@ -285,7 +233,7 @@ export const RUN: InstructionRun[] = [
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
     const result = memory.getU16(address);
-    if (result.fault === null) {
+    if (result.fault.isFault) {
       registers[args.b] = result.ok;
     }
     return okOrFault(result.fault);
@@ -397,7 +345,7 @@ export const RUN: InstructionRun[] = [
   // STORE_IMM_IND_U16
   (args, registers, memory) => {
     const address = registers[args.a] + args.b;
-    const pageFault = memory.setU16(address, args.c);
+    const pageFault = memory.setU16(address, <u16>(args.c & 0xff_ff));
     return okOrFault(pageFault);
   },
   // SHLO_L
@@ -431,7 +379,7 @@ export const RUN: InstructionRun[] = [
   // LOAD_U8
   (args, registers, memory) => {
     const result = memory.getU8(args.b);
-    if (result.fault === null) {
+    if (result.fault.isFault) {
       registers[args.a] = result.ok;
     }
     return okOrFault(result.fault);
@@ -444,7 +392,7 @@ export const RUN: InstructionRun[] = [
   // STORE_IMM_U8
   (args, _registers, memory) => {
     const address = args.a;
-    const pageFault = memory.setU8(address, args.b);
+    const pageFault = memory.setU8(address, <u8>(args.b & 0xff));
     return okOrFault(pageFault);
   },
   // MUL_UPPER_U_U_IMM
@@ -469,7 +417,7 @@ export const RUN: InstructionRun[] = [
   // LOAD_I16
   (args, registers, memory) => {
     const result = memory.getI16(args.b);
-    if (result.fault === null) {
+    if (result.fault.isFault) {
       registers[args.a] = result.ok;
     }
     return okOrFault(result.fault);
@@ -490,7 +438,7 @@ export const RUN: InstructionRun[] = [
   },
   // STORE_U16
   (args, registers, memory) => {
-    const fault = memory.setU16(args.c, registers[args.a]);
+    const fault = memory.setU16(args.c, <u16>(registers[args.a] & 0xff_ff));
     return okOrFault(fault);
   },
   // REM_S
@@ -504,7 +452,7 @@ export const RUN: InstructionRun[] = [
   },
   // STORE_U8
   (args, registers, memory) => {
-    const fault = memory.setU8(args.c, registers[args.a]);
+    const fault = memory.setU8(args.c, <u8>(registers[args.a] & 0xff));
     return okOrFault(fault);
   },
   // SHLO_R_IMM_ALT
@@ -525,7 +473,7 @@ export const RUN: InstructionRun[] = [
   // LOAD_I8
   (args, registers, memory) => {
     const result = memory.getI8(args.b);
-    if (result.fault === null) {
+    if (result.fault.isFault) {
       registers[args.a] = result.ok;
     }
     return okOrFault(result.fault);
@@ -539,7 +487,7 @@ export const RUN: InstructionRun[] = [
   // LOAD_U16
   (args, registers, memory) => {
     const result = memory.getU16(args.b);
-    if (result.fault === null) {
+    if (result.fault.isFault) {
       registers[args.a] = result.ok;
     }
     return okOrFault(result.fault);
@@ -557,7 +505,7 @@ export const RUN: InstructionRun[] = [
   // STORE_IMM_U16
   (args, _registers, memory) => {
     const address = args.a;
-    const pageFault = memory.setU16(address, args.b);
+    const pageFault = memory.setU16(address, <u16>(args.b & 0xff_ff));
     return okOrFault(pageFault);
   },
   // SHAR_R_IMM_ALT

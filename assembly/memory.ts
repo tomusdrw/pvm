@@ -1,24 +1,32 @@
-export type MaybePageFault = u32 | null;
+@unmanaged
+export class MaybePageFault {
+  isFault: boolean = false;
+  fault: u32 = 0;
+}
 
 @unmanaged
 export class Result {
   ok: u32 = 0;
-  fault: MaybePageFault = null;
+  fault: MaybePageFault = new MaybePageFault;
 }
 
 export class Memory {
   sbrk(amount: u32): u32 {
     throw new Error("Method not implemented.");
   }
+
   getU16(address: u32): Result {
     throw new Error("Method not implemented.");
   }
+
   getI16(address: u32): Result {
     throw new Error("Method not implemented.");
   }
+
   getI8(address: u32): Result {
     throw new Error("Method not implemented.");
   }
+
   getU8(address: u32): Result {
     throw new Error("Method not implemented.");
   }

@@ -1,5 +1,7 @@
 import {decodeProgram, getAssembly} from "./program";
 
+export * from './api';
+
 
 export function example(): string {
   const program: u8[] = [
