@@ -1,24 +1,25 @@
 {
-	"name": "as-pvm",
+	"name": "anan-as",
 	"version": "1.0.0",
 	"main": "index.js",
 	"scripts": {
 		"asbuild": "npm run asbuild:debug && npm run asbuild:release",
 		"asbuild:debug": "asc assembly/index.ts --target debug",
 		"asbuild:release": "asc assembly/index.ts --target release",
+		"cp-build": "rm -rf ./web/build; cp -r ./build ./web/",
+		"build": "npm run asbuild && npm run cp-build",
 		"format": "biome format --write",
 		"lint": "biome lint --write; biome check --write",
 		"qa": "biome ci",
 		"qa-fix": "npm run format; npm run lint",
-		"start": "npx serve .",
-		"test": "asp"
+		"prestart": "npm run build",
+		"start": "npx live-server ./web"
 	},
 	"keywords": [],
 	"author": "Fluffy Labs",
 	"license": "MPL-2.0",
 	"description": "",
 	"devDependencies": {
-		"@as-pect/cli": "^8.1.0",
 		"@biomejs/biome": "^1.9.4",
 		"assemblyscript": "^0.27.31"
 	},
