@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+#root, html {
+  font-size: 18px;
+  font-family: monospace;
+}
+* {
+  font-size: 1rem;
+}
+h1 {
+  font-size: 2rem;
+}
+h3 {
+  font-size: 1.4rem;
+  text-align: right;
+}
+body {
+  width: 70vw;
+  max-width: 1024px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+button {
+  padding: 1rem;
+  cursor: pointer;
+}
+textarea {
+  padding: 1rem;
+}
+pre {
+  border: 1px solid #ccc;
+  background: #ddd;
+  padding: 1rem;
+}
+</style>
+<script type="module" defer>
+import { exampleGetAssembly, exampleRun } from "./build/release.js";
+const $code = document.querySelector('#code');
+const $run = document.querySelector('#run');
+const $out = document.querySelector('#output');
+
+$run.addEventListener('click', () => {
+  $out.classList.remove('error');
+  const markError = () => {
+    $out.classList.add('error');
+  };
+  let program;
+  try {
+    program = JSON.parse($code.value);
+  } catch (e) {
+    console.error(e);
+    $out.innerHTML = `Not a valid JSON: ${e}`;
+    markError();
+    return;
+  }
+  try {
+    const asm = exampleGetAssembly(program);
+    $out.innerHTML = asm;
+  } catch (e) {
+    console.error(e);
+    $out.innerHTML = `Invalid program: ${e}`;
+    markError();
+    return;
+  }
+
+  try {
+    exampleRun(program);
+    $out.innerHTML += `\n\n Run OK!`;
+  } catch (e) {
+    console.error(e);
+    $out.innerHTML += `\n\n Run error: ${e}`;
+    markError();
+  }
+});
+$run.click();
+</script>
+</head>
+<body>
+  <h3>Check out <a href="https://fluffylabs.dev">other fluffy stuff.</a></h3>
+  <h1>🍍 Anan-AS</h1>
+  <textarea id="code" rows="10">
+[
+  0, 0, 33, 4, 8, 1, 4, 9, 1, 5, 3, 0, 2, 119, 255, 7, 7, 12, 82, 138, 8, 152, 8, 82, 169, 5, 243, 82, 135, 4, 8, 4, 9, 17, 19, 0, 73, 147, 82, 213, 0
+]
+  </textarea>
+  <button id="run">Disassemble &amp; Run</button>
+  <pre id="output">
+  </pre>
+  <a href="https://pvm.fluffylabs.dev">Looking for a better disassembler for PVM?</a>
+</body>
+</html>
