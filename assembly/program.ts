@@ -54,6 +54,10 @@ export class Mask {
   }
 
   isInstruction(index: ProgramCounter): boolean {
+    if (index >= <u32>this.bytesToSkip.length) {
+      return false;
+    }
+
     return this.bytesToSkip[index] === 0;
   }
 
@@ -74,9 +78,9 @@ export class Mask {
 }
 
 export enum BasicBlock {
-  NONE,
-  START,
-  END,
+  NONE = 0,
+  START = 2,
+  END = 4,
 }
 
 export class BasicBlocks {
@@ -86,25 +90,25 @@ export class BasicBlocks {
     const len = code.length;
     const isStartOrEnd = new StaticArray<BasicBlock>(len);
     let inBlock = false;
-    for (let i = 0; i < len; i += 1) {
+    for (let i: i32 = 0; i < len; i += 1) {
       const skip = mask.bytesToSkip[i];
       const isInstruction = skip === 0;
       if (isInstruction && !inBlock) {
         inBlock = true;
-        isStartOrEnd[i] = BasicBlock.START;
-      } else if (isInstruction && inBlock && INSTRUCTIONS[code[i]].isTerminating) {
-        inBlock = false;
-        isStartOrEnd[i] = BasicBlock.END;
-      } else {
-        isStartOrEnd[i] = BasicBlock.NONE;
+        isStartOrEnd[i] += BasicBlock.START;
       }
+      // in case of start blocks, some of them might be both start & end;
+      if (isInstruction && inBlock && INSTRUCTIONS[code[i]].isTerminating) {
+        inBlock = false;
+        isStartOrEnd[i] += BasicBlock.END;
+      } 
     }
     this.isStartOrEnd = isStartOrEnd;
   }
 
   isStart(newPc: u32): boolean {
     if (newPc < <u32>this.isStartOrEnd.length) {
-      return this.isStartOrEnd[newPc] === BasicBlock.START;
+      return (this.isStartOrEnd[newPc] & BasicBlock.START) > 0;
     }
     return false;
   }
@@ -112,7 +116,11 @@ export class BasicBlocks {
   toString(): string {
     let v = 'BasicBlocks[';
     for (let i = 0; i < this.isStartOrEnd.length; i+=1) {
-      const t = this.isStartOrEnd[i] === BasicBlock.START ? 'start' : this.isStartOrEnd[i] === BasicBlock.END ? 'end' : '';
+      let t = '';
+      const isStart = (this.isStartOrEnd[i] & BasicBlock.START) > 0;
+      t += isStart ? 'start' : '';
+      const isEnd = (this.isStartOrEnd[i] & BasicBlock.END) > 0;
+      t += isEnd ? 'end' : '';
       v += `${i} -> ${t}, `;
     }
     return `${v}]`;

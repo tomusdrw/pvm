@@ -23,6 +23,7 @@ export class Interpreter {
   public pc: u32;
   public status: Status;
   public exitCode: u32;
+  public nextPc: u32;
 
   constructor(
     program: Program,
@@ -35,18 +36,28 @@ export class Interpreter {
     this.pc = 0;
     this.status = Status.OK;
     this.exitCode = 0;
+    this.nextPc = 0;
   }
 
   nextStep(): boolean {
     if (this.status !== Status.OK) {
       return false;
     }
+
+    // TODO [ToDr] Some weird pre-init step for the debugger?
+    if (this.nextPc !== -1) {
+      this.pc = this.nextPc;
+      this.nextPc = -1;
+      return true;
+    }
+
     // reset some stuff at start
     this.exitCode = 0;
 
     const pc = this.pc;
     // check if we are at the right location
     if (!this.program.mask.isInstruction(pc)) {
+      this.gas.sub(1);
       this.status = Status.PANIC;
       return false;
     }
@@ -64,14 +75,14 @@ export class Interpreter {
     const argsLen = this.program.mask.argsLen(pc);
     const args = decodeArguments(
       iData.kind,
-      this.program.code.subarray(pc, pc + argsLen)
+      this.program.code.subarray(pc + 1, pc + 1 + argsLen)
     ); 
 
     const exe = RUN[instruction];
     const outcome = exe(args, this.registers, this.memory);
 
     // by default move to next instruction.
-    this.pc += argsLen;
+    this.pc += 1 + argsLen;
 
     let branchResult = new BranchResult;
     // TODO [ToDr] Spaghetti
@@ -94,6 +105,7 @@ export class Interpreter {
         this.pc = branchResult.newPc;
         return true;
       case Outcome.StaticJump:
+        console.log(`Static jump to ${outcome.staticJump}`);
         branchResult = branch(this.program.basicBlocks, pc, outcome.staticJump);
         if (!branchResult.isOkay) {
           this.status = Status.PANIC;
@@ -101,6 +113,7 @@ export class Interpreter {
         }
 
         this.pc = branchResult.newPc;
+        console.log(`new pc: ${this.pc}`);
         return true;
       case Outcome.Result:
         if (outcome.result === Result.HOST) {
@@ -138,10 +151,13 @@ class BranchResult {
 function branch(basicBlocks: BasicBlocks, pc: u32, offset: i32): BranchResult {
   const r = new BranchResult;
   const newPc = pc + offset;
-  if (!basicBlocks.isStart(newPc)) {
-    r.isOkay =true;
+  console.log(`Checking location: ${newPc}`);
+  if (basicBlocks.isStart(newPc)) {
+    r.isOkay = true;
     r.newPc = newPc;
   }
+  console.log(`isokay: ${r.isOkay}`);
+  console.log(`blcoks: ${basicBlocks.toString()}`);
   return r;
 }
 

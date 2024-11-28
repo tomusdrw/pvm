@@ -3,10 +3,12 @@
 <head>
 <script type="module">
 document.body.innerHTML = 'Error loading';
-import { example } from "./build/release.js";
+import { exampleGetAssembly, exampleRun } from "./build/release.js";
 try {
-  console.log(example());
+  console.log(exampleGetAssembly());
   document.body.innerHTML = 'OK!';
+
+  // exampleRun();
 } catch (e) {
   console.error(e);
   document.body.innerHTML = e;

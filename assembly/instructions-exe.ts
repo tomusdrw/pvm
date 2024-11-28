@@ -26,7 +26,7 @@ export const RUN: InstructionRun[] = [
   },
   // ADD_IMM
   (args, registers) => {
-    const sum = registers[args.a] + args.c;
+    const sum: u32 = registers[args.a] + args.c;
     registers[args.b] = sum;
     return ok();
   },

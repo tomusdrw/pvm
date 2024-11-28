@@ -53,7 +53,7 @@ export function setNextProgramCounter(pc: u32): void {
     return;
   }
   const int = <Interpreter>(interpreter);
-  int.pc = pc;
+  int.nextPc = pc;
 }
 
 export function getStatus(): u8 {
@@ -90,8 +90,8 @@ export function setGasLeft(gas: i64): void {
 
 const REG_SIZE_BYTES = 4;
 
-export function getRegisters(): u8[] {
-  const flat = new Array<u8>(NO_OF_REGISTERS * REG_SIZE_BYTES).fill(0);
+export function getRegisters(): Uint8Array {
+  const flat = new Uint8Array(NO_OF_REGISTERS * REG_SIZE_BYTES).fill(0);
   if (interpreter === null) {
     return flat;
   }
@@ -109,8 +109,8 @@ export function getRegisters(): u8[] {
   return flat;
 }
 
-export function getPageDump(_index: u32): u8[] {
-  const page = new Array<u8>(4096).fill(0);
+export function getPageDump(_index: u32): Uint8Array {
+  const page = new Uint8Array(4096).fill(0);
   // TODO [ToDr] read from memory.
   return page;
 }
@@ -122,10 +122,10 @@ function fillRegisters(registers: Registers, flat: u8[]): void {
   }
 
   for (let i = 0; i < registers.length; i++) {
-    let num = 0;
+    let num: u32 = 0;
     for (let j: u8 = 0; j < <u8>REG_SIZE_BYTES; j++) {
       const index = i * REG_SIZE_BYTES + j;
-      num |= flat[index] << (j * 8);
+      num |= (<u32>(flat[index]) << (j * 8));
     }
     registers[i] = num;
   }

@@ -38,8 +38,8 @@ type ArgsDecoder = (data: Uint8Array) => Args;
 function twoImm(data: Uint8Array): Args {
   const n = nibbles(data[0]);
   const split = n.low + 1;
-  const first = decodeU32(data.subarray(1, split));
-  const second = decodeU32(data.subarray(split));
+  const first = decodeI32(data.subarray(1, split));
+  const second = decodeI32(data.subarray(split));
   return asArgs(first, second, 0, 0);
 }
 
@@ -50,7 +50,7 @@ export const DECODERS: ArgsDecoder[] = [
 },
 // DECODERS[Arguments.OneImm] =
 (data: Uint8Array) => {
-  return asArgs( decodeU32(data), 0, 0, 0 );
+  return asArgs(decodeI32(data), 0, 0, 0 );
 },
 // DECODERS[Arguments.TwoImm] =
 (data: Uint8Array) => twoImm(data),
@@ -60,7 +60,7 @@ export const DECODERS: ArgsDecoder[] = [
 },
 // DECODERS[Arguments.OneRegOneImm] =
 (data: Uint8Array) => {
-  return asArgs(nibbles(data[0]).low, decodeU32(data.subarray(1)), 0, 0 );
+  return asArgs(nibbles(data[0]).low, decodeI32(data.subarray(1)), 0, 0 );
 },
 //DECODERS[Arguments.OneRegTwoImm] =
 (data: Uint8Array) => {
@@ -72,7 +72,7 @@ export const DECODERS: ArgsDecoder[] = [
   const n = nibbles(data[0]);
   return asArgs(
     n.low,
-    decodeU32(data.subarray(1, 1 + n.hig)),
+    decodeI32(data.subarray(1, 1 + n.hig)),
     decodeI32(data.subarray(1 + n.hig)),
     0
   );
@@ -85,7 +85,7 @@ export const DECODERS: ArgsDecoder[] = [
 // DECODERS[Arguments.TwoRegOneImm] =
 (data: Uint8Array) => {
   const n = nibbles(data[0]);
-  return asArgs(n.hig, n.low, decodeU32(data.subarray(1)), 0);
+  return asArgs(n.hig, n.low, decodeI32(data.subarray(1)), 0);
 },
 // DECODERS[Arguments.TwoRegOneOff] =
 (data: Uint8Array) => {
@@ -122,16 +122,6 @@ function nibbles(byte: u8): Nibbles {
   n.hig = hig;
   return n;
 }
-
-//@inline
-function decodeU32(data: Uint8Array): u32 {
-  const len = <u8>data.length;
-  let num = 0;
-  for (let i: u8 = 0; i < len; i+=1) {
-    num |= data[i] << (i * 8);
-  }
-  return num;
-};
 
 //@inline
 function decodeI32(data: Uint8Array): u32 {
