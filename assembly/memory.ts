@@ -46,7 +46,7 @@ export class MemoryBuilder {
     const page = this.pages.get(pageIdx);
     page.raw.data.set(data, relAddress);
 
-    if (relAddress + data.length >= PAGE_SIZE) {
+    if (relAddress + data.length >= <u32>PAGE_SIZE) {
       throw new Error("Unable to write data in builder. Exceeds the page!");
     }
   }

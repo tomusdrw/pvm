@@ -16,6 +16,10 @@ export class Decoder {
     private offset: i32 = 0,
   ) {}
 
+  isExhausted(): boolean {
+    return this.offset >= this.source.length;
+  }
+
   varU32(): u32 {
     const v = readVarU32(this.source.subarray(this.offset));
     this.offset += v.offset;
@@ -25,6 +29,15 @@ export class Decoder {
   u8(): u8 {
     const v = this.source[this.offset];
     this.offset += 1;
+    return v;
+  }
+
+  u32(): u32 {
+    let v  = this.source[this.offset];
+    v |= this.source[this.offset + 1] << 8;
+    v |= this.source[this.offset + 2] << 16;
+    v |= this.source[this.offset + 3] << 24;
+    this.offset += 4;
     return v;
   }
 

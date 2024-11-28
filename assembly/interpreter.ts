@@ -25,10 +25,14 @@ export class Interpreter {
   public exitCode: u32;
   public nextPc: u32;
 
-  constructor(program: Program, registers: Registers) {
+  constructor(
+    program: Program,
+    registers: Registers,
+    memory: Memory = new MemoryBuilder().build(0)
+  ) {
     this.program = program;
     this.registers = registers;
-    this.memory = new MemoryBuilder().build(0);
+    this.memory = memory;
     this.gas = gasCounter(0);
     this.pc = 0;
     this.status = Status.OK;
