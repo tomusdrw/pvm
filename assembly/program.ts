@@ -1,3 +1,4 @@
+import {Args, Arguments, DECODERS, RELEVANT_ARGS} from "./arguments";
 import {Decoder} from "./codec";
 import {INSTRUCTIONS} from "./instructions";
 
@@ -77,7 +78,6 @@ export class BasicBlocks {
     for (let i = 0; i < len; i += 1) {
       const skip = mask.bytesToSkip[i];
       const isInstruction = skip === 0;
-      const instruction = code[i];
       if (isInstruction && !inBlock) {
         inBlock = true;
         isStartOrEnd[i] = BasicBlock.START;
@@ -141,26 +141,42 @@ export class Program {
     public readonly basicBlocks: BasicBlocks,
   ) {}
 
-  getAssembly(): string {
-    let v = '';
-    for (let i = 0; i < this.code.length; i ++ ){
-      const skip = this.mask.bytesToSkip[i];
-      if (skip === 0) {
-        const instruction = this.code[i];
-        v += '\n';
-        v += changetype<string>(INSTRUCTIONS[instruction].namePtr);
-        continue;
-      }
-
-      for (let j = <u8>0; j < skip; j++) {
-        v += ` ${this.code[i + j]},`;
-      }
-      i += skip - 1;
-    }
-    return v;
-  }
-
   toString(): string {
     return `Program { code: ${this.code}, mask: ${this.mask}, jumpTable: ${this.jumpTable}, basicBlocks: ${this.basicBlocks} }`;
   }
+}
+
+
+export function getAssembly(p: Program): string {
+  let v = '';
+  const len = p.code.length;
+  for (let i = 0; i < len; i ++ ){
+    if (p.mask.bytesToSkip[i] !== 0) {
+      throw new Error('We should iterate only over instructions!');
+    }
+    const instruction = p.code[i];
+    const iData = INSTRUCTIONS[instruction];
+    v += '\n';
+    v += changetype<string>(iData.namePtr);
+
+    const argsLen = i + 1 < len ? p.mask.bytesToSkip[i + 1] : 0;
+    const args = decodeArguments(
+      iData.kind,
+      p.code.subarray(i + 1, i + 1 + argsLen)
+    );
+    const argsArray = [args.a, args.b, args.c, args.d];
+    const relevantArgs = <i32>RELEVANT_ARGS[iData.kind];
+    for (let i = 0; i < relevantArgs; i++) {
+      v += ` ${argsArray[i]}, `;
+    }
+    i += argsLen;
+  }
+  return v;
+}
+
+export function decodeArguments(
+  kind: Arguments,
+  data: Uint8Array,
+): Args {
+  return DECODERS[kind](data);
 }

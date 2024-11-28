@@ -1,4 +1,4 @@
-import {decodeProgram} from "./program";
+import {decodeProgram, getAssembly} from "./program";
 
 
 export function example(): string {
@@ -11,5 +11,5 @@ export function example(): string {
 
   console.log(p.toString());
 
-  return p.getAssembly();
+  return getAssembly(p);
 }
