@@ -8,7 +8,7 @@ const variableLength = (firstByte: u8): u8 => {
     }
   }
   return 0;
-}
+};
 
 export class Decoder {
   constructor(
@@ -48,12 +48,12 @@ export function readVarU32(data: Uint8Array): ValOffset<u32> {
   const first = data[0];
   const length = variableLength(first);
   if (length === 0) {
-    return new ValOffset(<u32>(first), 1);
+    return new ValOffset(<u32>first, 1);
   }
 
   const msb = (first + 2 ** (8 - length) - 2 ** 8) << (length * 8);
   let number = msb;
-  let index = 1;
+  const index = 1;
   for (let i = length - 1; i >= 0; i--) {
     number = (number << 8) + data[index];
   }

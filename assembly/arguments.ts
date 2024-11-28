@@ -1,16 +1,16 @@
 export enum Arguments {
-  Zero,
-  OneImm,
-  TwoImm,
-  OneOff,
-  OneRegOneImm,
-  OneRegTwoImm,
-  OneRegOneImmOneOff,
-  TwoReg,
-  TwoRegOneImm,
-  TwoRegOneOff,
-  TwoRegTwoImm,
-  ThreeReg,
+  Zero = 0,
+  OneImm = 1,
+  TwoImm = 2,
+  OneOff = 3,
+  OneRegOneImm = 4,
+  OneRegTwoImm = 5,
+  OneRegOneImmOneOff = 6,
+  TwoReg = 7,
+  TwoRegOneImm = 8,
+  TwoRegOneOff = 9,
+  TwoRegTwoImm = 10,
+  ThreeReg = 11,
 }
 
 /** How many numbers in `Args` is relevant for given `Arguments`. */
@@ -25,7 +25,7 @@ export class Args {
 }
 
 function asArgs(a: u32, b: u32, c: u32, d: u32): Args {
-  const x = new Args;
+  const x = new Args();
   x.a = a;
   x.b = b;
   x.c = c;
@@ -44,68 +44,62 @@ function twoImm(data: Uint8Array): Args {
 }
 
 export const DECODERS: ArgsDecoder[] = [
-// DECODERS[Arguments.Zero] = 
-(_) => {
-  return asArgs(0, 0, 0, 0);
-},
-// DECODERS[Arguments.OneImm] =
-(data: Uint8Array) => {
-  return asArgs(decodeI32(data), 0, 0, 0 );
-},
-// DECODERS[Arguments.TwoImm] =
-(data: Uint8Array) => twoImm(data),
-// DECODERS[Arguments.OneOff] =
-(data: Uint8Array) => {
-  return asArgs(decodeI32(data), 0, 0, 0);
-},
-// DECODERS[Arguments.OneRegOneImm] =
-(data: Uint8Array) => {
-  return asArgs(nibbles(data[0]).low, decodeI32(data.subarray(1)), 0, 0 );
-},
-//DECODERS[Arguments.OneRegTwoImm] =
-(data: Uint8Array) => {
-  const result = twoImm(data.subarray(1));
-  return asArgs(nibbles(data[0]).low, result.a, result.b, result.c);
-},
-// DECODERS[Arguments.OneRegOneImmOneOff] =
-(data: Uint8Array) => {
-  const n = nibbles(data[0]);
-  return asArgs(
-    n.low,
-    decodeI32(data.subarray(1, 1 + n.hig)),
-    decodeI32(data.subarray(1 + n.hig)),
-    0
-  );
-},
-// DECODERS[Arguments.TwoReg] =
-(data: Uint8Array) => {
-  const n = nibbles(data[0]);
-  return asArgs(n.hig, n.low, 0, 0);
-},
-// DECODERS[Arguments.TwoRegOneImm] =
-(data: Uint8Array) => {
-  const n = nibbles(data[0]);
-  return asArgs(n.hig, n.low, decodeI32(data.subarray(1)), 0);
-},
-// DECODERS[Arguments.TwoRegOneOff] =
-(data: Uint8Array) => {
-  const n = nibbles(data[0]);
-  return asArgs(n.hig, n.low, decodeI32(data.subarray(1)), 0);
-},
-// DECODERS[Arguments.TwoRegTwoImm] =
-(data: Uint8Array) => {
-  const n = nibbles(data[0]);
-  const result = twoImm(data.subarray(1));
-  return asArgs(n.hig, n.low, result.a, result.b);
-},
-// DECODERS[Arguments.ThreeReg] =
-(data: Uint8Array) => {
-  const a = nibbles(data[0]);
-  const b = nibbles(data[1]);
-  return asArgs(a.hig, a.low, b.low, 0);
-},
+  // DECODERS[Arguments.Zero] =
+  (_) => {
+    return asArgs(0, 0, 0, 0);
+  },
+  // DECODERS[Arguments.OneImm] =
+  (data: Uint8Array) => {
+    return asArgs(decodeI32(data), 0, 0, 0);
+  },
+  // DECODERS[Arguments.TwoImm] =
+  (data: Uint8Array) => twoImm(data),
+  // DECODERS[Arguments.OneOff] =
+  (data: Uint8Array) => {
+    return asArgs(decodeI32(data), 0, 0, 0);
+  },
+  // DECODERS[Arguments.OneRegOneImm] =
+  (data: Uint8Array) => {
+    return asArgs(nibbles(data[0]).low, decodeI32(data.subarray(1)), 0, 0);
+  },
+  //DECODERS[Arguments.OneRegTwoImm] =
+  (data: Uint8Array) => {
+    const result = twoImm(data.subarray(1));
+    return asArgs(nibbles(data[0]).low, result.a, result.b, result.c);
+  },
+  // DECODERS[Arguments.OneRegOneImmOneOff] =
+  (data: Uint8Array) => {
+    const n = nibbles(data[0]);
+    return asArgs(n.low, decodeI32(data.subarray(1, 1 + n.hig)), decodeI32(data.subarray(1 + n.hig)), 0);
+  },
+  // DECODERS[Arguments.TwoReg] =
+  (data: Uint8Array) => {
+    const n = nibbles(data[0]);
+    return asArgs(n.hig, n.low, 0, 0);
+  },
+  // DECODERS[Arguments.TwoRegOneImm] =
+  (data: Uint8Array) => {
+    const n = nibbles(data[0]);
+    return asArgs(n.hig, n.low, decodeI32(data.subarray(1)), 0);
+  },
+  // DECODERS[Arguments.TwoRegOneOff] =
+  (data: Uint8Array) => {
+    const n = nibbles(data[0]);
+    return asArgs(n.hig, n.low, decodeI32(data.subarray(1)), 0);
+  },
+  // DECODERS[Arguments.TwoRegTwoImm] =
+  (data: Uint8Array) => {
+    const n = nibbles(data[0]);
+    const result = twoImm(data.subarray(1));
+    return asArgs(n.hig, n.low, result.a, result.b);
+  },
+  // DECODERS[Arguments.ThreeReg] =
+  (data: Uint8Array) => {
+    const a = nibbles(data[0]);
+    const b = nibbles(data[1]);
+    return asArgs(a.hig, a.low, b.low, 0);
+  },
 ];
-
 
 @unmanaged
 class Nibbles {
@@ -117,7 +111,7 @@ class Nibbles {
 function nibbles(byte: u8): Nibbles {
   const low = byte & 0xf;
   const hig = byte >> 4;
-  const n = new Nibbles;
+  const n = new Nibbles();
   n.low = low;
   n.hig = hig;
   return n;

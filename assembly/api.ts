@@ -1,22 +1,15 @@
-import {Gas} from "./gas";
-import {Interpreter, Status} from "./interpreter";
-import {decodeProgram} from "./program";
-import {NO_OF_REGISTERS, Registers} from "./registers";
+import { Gas } from "./gas";
+import { Interpreter, Status } from "./interpreter";
+import { decodeProgram } from "./program";
+import { NO_OF_REGISTERS, Registers } from "./registers";
 
 let interpreter: Interpreter | null = null;
 
-export function resetGeneric(
-  program: u8[],
-  flatRegisters: u8[],
-  initialGas: Gas,
-): void {
+export function resetGeneric(program: u8[], flatRegisters: u8[], initialGas: Gas): void {
   const p = decodeProgram(program);
   const registers: Registers = new StaticArray(NO_OF_REGISTERS);
   fillRegisters(registers, flatRegisters);
-  const int = new Interpreter(
-    p,
-    registers
-  );
+  const int = new Interpreter(p, registers);
   int.gas.set(initialGas);
 
   interpreter = int;
@@ -24,8 +17,8 @@ export function resetGeneric(
 export function resetGenericWithMemory(
   program: u8[],
   flatRegisters: u8[],
-  pageMap: u8[],
-  chunks: u8[],
+  _pageMap: u8[],
+  _chunks: u8[],
   initialGas: Gas,
 ): void {
   // TODO [ToDr] memory not available yet.
@@ -34,7 +27,7 @@ export function resetGenericWithMemory(
 
 export function nextStep(): boolean {
   if (interpreter !== null) {
-    const int = <Interpreter>(interpreter);
+    const int = <Interpreter>interpreter;
     return int.nextStep();
   }
   return false;
@@ -44,7 +37,7 @@ export function getProgramCounter(): u32 {
   if (interpreter === null) {
     return 0;
   }
-  const int = <Interpreter>(interpreter);
+  const int = <Interpreter>interpreter;
   return int.pc;
 }
 
@@ -52,41 +45,40 @@ export function setNextProgramCounter(pc: u32): void {
   if (interpreter === null) {
     return;
   }
-  const int = <Interpreter>(interpreter);
+  const int = <Interpreter>interpreter;
   int.nextPc = pc;
 }
 
 export function getStatus(): u8 {
   if (interpreter === null) {
-    return <u8>(Status.PANIC);
+    return <u8>Status.PANIC;
   }
-  const int = <Interpreter>(interpreter);
-  return <u8>(int.status);
+  const int = <Interpreter>interpreter;
+  return <u8>int.status;
 }
 
 export function getExitArg(): u32 {
   if (interpreter === null) {
     return 0;
   }
-  const int = <Interpreter>(interpreter);
-  return int.exitCode || 0; 
+  const int = <Interpreter>interpreter;
+  return int.exitCode || 0;
 }
 
 export function getGasLeft(): i64 {
   if (interpreter === null) {
     return 0;
   }
-  const int = <Interpreter>(interpreter);
+  const int = <Interpreter>interpreter;
   return int.gas.get();
 }
 
 export function setGasLeft(gas: i64): void {
   if (interpreter !== null) {
-    const int = <Interpreter>(interpreter);
+    const int = <Interpreter>interpreter;
     int.gas.set(gas);
   }
 }
-
 
 const REG_SIZE_BYTES = 4;
 
@@ -96,7 +88,7 @@ export function getRegisters(): Uint8Array {
     return flat;
   }
 
-  const int = <Interpreter>(interpreter);
+  const int = <Interpreter>interpreter;
   for (let i = 0; i < int.registers.length; i++) {
     let val = int.registers[i];
     for (let j = 0; j < REG_SIZE_BYTES; j++) {
@@ -125,7 +117,7 @@ function fillRegisters(registers: Registers, flat: u8[]): void {
     let num: u32 = 0;
     for (let j: u8 = 0; j < <u8>REG_SIZE_BYTES; j++) {
       const index = i * REG_SIZE_BYTES + j;
-      num |= (<u32>(flat[index]) << (j * 8));
+      num |= (<u32>flat[index]) << (j * 8);
     }
     registers[i] = num;
   }

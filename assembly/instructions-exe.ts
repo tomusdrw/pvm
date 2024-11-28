@@ -1,16 +1,12 @@
-import {Args} from "./arguments";
-import {Result, OutcomeData, dJump, hostCall, ok, okOrFault, staticJump, status} from "./instructions-outcome";
-import {mulUpperSigned, mulUpperUnsigned} from "./math";
-import {Memory} from "./memory";
-import {Registers} from "./registers";
+import { Args } from "./arguments";
+import { OutcomeData, Result, dJump, hostCall, ok, okOrFault, staticJump, status } from "./instructions-outcome";
+import { mulUpperSigned, mulUpperUnsigned } from "./math";
+import { Memory } from "./memory";
+import { Registers } from "./registers";
 
 const MAX_SHIFT = 32;
 
-type InstructionRun = (
-  args: Args,
-  registers: Registers,
-  memory: Memory,
-) => OutcomeData;
+type InstructionRun = (args: Args, registers: Registers, memory: Memory) => OutcomeData;
 
 export const RUN: InstructionRun[] = [
   // TRAP
@@ -200,7 +196,7 @@ export const RUN: InstructionRun[] = [
   },
   // BRANCH_LT_S_IMM
   (args, registers) => {
-    if (<i32>(registers[args.a])< <i32>(args.b)) {
+    if (<i32>registers[args.a] < <i32>args.b) {
       return staticJump(args.c);
     }
     return ok();
@@ -270,7 +266,7 @@ export const RUN: InstructionRun[] = [
   },
   // BRANCH_GE_S
   (args, registers) => {
-    if (<i32>(registers[args.a]) >= <i32>(registers[args.b])) {
+    if (<i32>registers[args.a] >= <i32>registers[args.b]) {
       return staticJump(args.c);
     }
     return ok();
@@ -284,14 +280,14 @@ export const RUN: InstructionRun[] = [
   },
   // BRANCH_GE_S_IMM
   (args, registers) => {
-    if (<i32>(registers[args.a]) >= <i32>(args.b)) {
+    if (<i32>registers[args.a] >= <i32>args.b) {
       return staticJump(args.c);
     }
     return ok();
   },
   // BRANCH_LE_S_IMM
   (args, registers) => {
-    if (<i32>(registers[args.a]) <= <i32>(args.b)) {
+    if (<i32>registers[args.a] <= <i32>args.b) {
       return staticJump(args.c);
     }
     return ok();
@@ -305,7 +301,7 @@ export const RUN: InstructionRun[] = [
   },
   // BRANCH_LT_U
   (args, registers) => {
-    if (<i32>(registers[args.a]) < <i32>(registers[args.b])) {
+    if (<i32>registers[args.a] < <i32>registers[args.b]) {
       return staticJump(args.c);
     }
     return ok();
@@ -337,7 +333,7 @@ export const RUN: InstructionRun[] = [
   },
   // BRANCH_GT_S_IMM
   (args, registers) => {
-    if (<i32>(registers[args.a]) > <i32>(args.b)) {
+    if (<i32>registers[args.a] > <i32>args.b) {
       return staticJump(args.c);
     }
     return ok();
@@ -356,7 +352,7 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_S_IMM
   (args, registers) => {
-    registers[args.b] = <i32>(registers[args.a]) < <i32>(args.c) ? 1 : 0;
+    registers[args.b] = <i32>registers[args.a] < <i32>args.c ? 1 : 0;
     return ok();
   },
   // MUL_UPPER_U_U
@@ -366,7 +362,7 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_S
   (args, registers) => {
-    registers[args.c] = <i32>(registers[args.a]) < <i32>(registers[args.b]) ? 1 : 0;
+    registers[args.c] = <i32>registers[args.a] < <i32>registers[args.b] ? 1 : 0;
     return ok();
   },
   // BRANCH_LE_U_IMM
@@ -386,7 +382,7 @@ export const RUN: InstructionRun[] = [
   },
   // SET_GT_S_IMM
   (args, registers) => {
-    registers[args.b] = <i32>(registers[args.a]) > <i32>(args.c) ? 1 : 0;
+    registers[args.b] = <i32>registers[args.a] > <i32>args.c ? 1 : 0;
     return ok();
   },
   // STORE_IMM_U8
@@ -403,15 +399,15 @@ export const RUN: InstructionRun[] = [
   // DIV_S
   (args, registers) => {
     if (registers[args.a] === 0) {
-      registers[args.c] = 2**32 - 1;
+      registers[args.c] = 2 ** 32 - 1;
     } else {
-      registers[args.c] = <i32>(registers[args.b]) / <i32>(registers[args.a]);
+      registers[args.c] = <i32>registers[args.b] / <i32>registers[args.a];
     }
     return ok();
   },
   // MUL_UPPER_S_S_IMM
   (args, registers) => {
-    registers[args.b] = mulUpperSigned(<i32>(registers[args.a]), <i32>(args.c));
+    registers[args.b] = mulUpperSigned(<i32>registers[args.a], <i32>args.c);
     return ok();
   },
   // LOAD_I16
@@ -424,13 +420,13 @@ export const RUN: InstructionRun[] = [
   },
   // MUL_UPPER_S_S
   (args, registers) => {
-    registers[args.c] = mulUpperSigned(<i32>(registers[args.a]), <i32>(registers[args.b]));
+    registers[args.c] = mulUpperSigned(<i32>registers[args.a], <i32>registers[args.b]);
     return ok();
   },
   // DIV_U
   (args, registers) => {
     if (registers[args.a] === 0) {
-      registers[args.c] = 2**32 - 1;
+      registers[args.c] = 2 ** 32 - 1;
     } else {
       registers[args.c] = registers[args.b] / registers[args.a];
     }
@@ -446,7 +442,7 @@ export const RUN: InstructionRun[] = [
     if (registers[args.a] === 0) {
       registers[args.c] = registers[args.b];
     } else {
-      registers[args.c] = <i32>(registers[args.b]) % <i32>(registers[args.a]);
+      registers[args.c] = <i32>registers[args.b] % <i32>registers[args.a];
     }
     return ok();
   },
@@ -516,7 +512,7 @@ export const RUN: InstructionRun[] = [
   },
   // MUL_UPPER_S_U
   (args, registers) => {
-    registers[args.c] = mulUpperSigned(<i32>(registers[args.a]), registers[args.b]);
+    registers[args.c] = mulUpperSigned(<i32>registers[args.a], registers[args.b]);
     return ok();
   },
   // MOVE_REG
@@ -556,5 +552,5 @@ export const RUN: InstructionRun[] = [
   (args, registers, memory) => {
     registers[args.b] = memory.sbrk(registers[args.a]);
     return ok();
-  }
+  },
 ];

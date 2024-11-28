@@ -1,10 +1,10 @@
-import {Gas, GasCounter, gasCounter} from "./gas";
-import {INSTRUCTIONS} from "./instructions";
-import {RUN} from "./instructions-exe";
-import {Outcome, OutcomeData, Result} from "./instructions-outcome";
-import {Memory} from "./memory";
-import {BasicBlock, BasicBlocks, JumpTable, Program, decodeArguments, decodeProgram} from "./program";
-import {Registers} from "./registers";
+import { GasCounter, gasCounter } from "./gas";
+import { INSTRUCTIONS } from "./instructions";
+import { RUN } from "./instructions-exe";
+import { Outcome, Result } from "./instructions-outcome";
+import { Memory } from "./memory";
+import { BasicBlocks, JumpTable, Program, decodeArguments } from "./program";
+import { Registers } from "./registers";
 
 export enum Status {
   OK = -1,
@@ -25,13 +25,10 @@ export class Interpreter {
   public exitCode: u32;
   public nextPc: u32;
 
-  constructor(
-    program: Program,
-    registers: Registers,
-  ) {
+  constructor(program: Program, registers: Registers) {
     this.program = program;
     this.registers = registers;
-    this.memory = new Memory;
+    this.memory = new Memory();
     this.gas = gasCounter(0);
     this.pc = 0;
     this.status = Status.OK;
@@ -73,21 +70,14 @@ export class Interpreter {
 
     // get args and invoke instruction
     const argsLen = this.program.mask.argsLen(pc);
-    const args = decodeArguments(
-      iData.kind,
-      this.program.code.subarray(pc + 1, pc + 1 + argsLen)
-    ); 
+    const args = decodeArguments(iData.kind, this.program.code.subarray(pc + 1, pc + 1 + argsLen));
 
     const exe = RUN[instruction];
     const outcome = exe(args, this.registers, this.memory);
 
-    // by default move to next instruction.
-    this.pc += 1 + argsLen;
-
-    let branchResult = new BranchResult;
     // TODO [ToDr] Spaghetti
     switch (outcome.outcome) {
-      case Outcome.DynamicJump:
+      case Outcome.DynamicJump: {
         const res = dJump(this.program.jumpTable, outcome.dJump);
         if (res.status === DjumpStatus.HALT) {
           this.status = Status.HALT;
@@ -97,16 +87,17 @@ export class Interpreter {
           this.status = Status.PANIC;
           return false;
         }
-        branchResult = branch(this.program.basicBlocks, res.newPc, 0);
+        const branchResult = branch(this.program.basicBlocks, res.newPc, 0);
         if (!branchResult.isOkay) {
           this.status = Status.PANIC;
           return false;
         }
         this.pc = branchResult.newPc;
         return true;
-      case Outcome.StaticJump:
+      }
+      case Outcome.StaticJump: {
         console.log(`Static jump to ${outcome.staticJump}`);
-        branchResult = branch(this.program.basicBlocks, pc, outcome.staticJump);
+        const branchResult = branch(this.program.basicBlocks, pc, outcome.staticJump);
         if (!branchResult.isOkay) {
           this.status = Status.PANIC;
           return false;
@@ -115,7 +106,8 @@ export class Interpreter {
         this.pc = branchResult.newPc;
         console.log(`new pc: ${this.pc}`);
         return true;
-      case Outcome.Result:
+      }
+      case Outcome.Result: {
         if (outcome.result === Result.HOST) {
           this.status = Status.HOST;
           this.exitCode = outcome.exitCode;
@@ -128,19 +120,22 @@ export class Interpreter {
         }
         if (outcome.result === Result.PANIC) {
           this.status = Status.PANIC;
-          return false
+          return false;
         }
 
-        throw new Error('Unknown result');
-      case Outcome.Ok:
+        throw new Error("Unknown result");
+      }
+      case Outcome.Ok: {
+        // by default move to next instruction.
+        this.pc += 1 + argsLen;
+
         return true;
+      }
     }
-    
+
     return false;
   }
 }
-
-
 
 @unmanaged
 class BranchResult {
@@ -149,7 +144,7 @@ class BranchResult {
 }
 
 function branch(basicBlocks: BasicBlocks, pc: u32, offset: i32): BranchResult {
-  const r = new BranchResult;
+  const r = new BranchResult();
   const newPc = pc + offset;
   console.log(`Checking location: ${newPc}`);
   if (basicBlocks.isStart(newPc)) {
@@ -161,11 +156,10 @@ function branch(basicBlocks: BasicBlocks, pc: u32, offset: i32): BranchResult {
   return r;
 }
 
-
 enum DjumpStatus {
-  OK,
-  HALT,
-  PANIC,
+  OK = 0,
+  HALT = 1,
+  PANIC = 2,
 }
 
 @unmanaged
@@ -178,7 +172,7 @@ const EXIT = 0xff_ff_00_00;
 const JUMP_ALIGMENT_FACTOR = 2;
 
 function dJump(jumpTable: JumpTable, address: u32): DjumpResult {
-  const r = new DjumpResult;
+  const r = new DjumpResult();
   if (address === EXIT) {
     r.status = DjumpStatus.HALT;
     return r;
@@ -197,4 +191,3 @@ function dJump(jumpTable: JumpTable, address: u32): DjumpResult {
   r.newPc = jumpTable.jumps[index];
   return r;
 }
-

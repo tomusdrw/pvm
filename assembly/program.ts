@@ -1,6 +1,6 @@
-import {Args, Arguments, DECODERS, RELEVANT_ARGS} from "./arguments";
-import {Decoder} from "./codec";
-import {INSTRUCTIONS} from "./instructions";
+import { Args, Arguments, DECODERS, RELEVANT_ARGS } from "./arguments";
+import { Decoder } from "./codec";
+import { INSTRUCTIONS } from "./instructions";
 
 export type ProgramCounter = u32;
 
@@ -26,11 +26,8 @@ export function decodeProgram(program: u8[]): Program {
   const jumpTable = new JumpTable(jumpTableItemLength, rawJumpTable);
   const basicBlocks = new BasicBlocks(rawCode, mask);
 
-  return new Program(
-    rawCode, mask, jumpTable, basicBlocks
-  );
+  return new Program(rawCode, mask, jumpTable, basicBlocks);
 }
-
 
 export class Mask {
   // NOTE: might be longer than code (bit-alignment)
@@ -41,7 +38,7 @@ export class Mask {
     let lastInstructionOffset: u8 = 0;
     for (let i = packedMask.length - 1; i >= 0; i -= 1) {
       let bits = packedMask[i];
-      let index = i * 8;
+      const index = i * 8;
       for (let b = 7; b >= 0; b--) {
         const isSet = bits & 0b1000_0000;
         bits = bits << 1;
@@ -69,8 +66,8 @@ export class Mask {
   }
 
   toString(): string {
-    let v = 'Mask[';
-    for (let i = 0; i < this.bytesToSkip.length; i+=1) {
+    let v = "Mask[";
+    for (let i = 0; i < this.bytesToSkip.length; i += 1) {
       v += `${this.bytesToSkip[i]}, `;
     }
     return `${v}]`;
@@ -101,7 +98,7 @@ export class BasicBlocks {
       if (isInstruction && inBlock && INSTRUCTIONS[code[i]].isTerminating) {
         inBlock = false;
         isStartOrEnd[i] += BasicBlock.END;
-      } 
+      }
     }
     this.isStartOrEnd = isStartOrEnd;
   }
@@ -114,27 +111,23 @@ export class BasicBlocks {
   }
 
   toString(): string {
-    let v = 'BasicBlocks[';
-    for (let i = 0; i < this.isStartOrEnd.length; i+=1) {
-      let t = '';
+    let v = "BasicBlocks[";
+    for (let i = 0; i < this.isStartOrEnd.length; i += 1) {
+      let t = "";
       const isStart = (this.isStartOrEnd[i] & BasicBlock.START) > 0;
-      t += isStart ? 'start' : '';
+      t += isStart ? "start" : "";
       const isEnd = (this.isStartOrEnd[i] & BasicBlock.END) > 0;
-      t += isEnd ? 'end' : '';
+      t += isEnd ? "end" : "";
       v += `${i} -> ${t}, `;
     }
     return `${v}]`;
   }
-
 }
 
 export class JumpTable {
   readonly jumps: StaticArray<ProgramCounter>;
 
-  constructor(
-    itemBytes: u8,
-    data: Uint8Array,
-  ) {
+  constructor(itemBytes: u8, data: Uint8Array) {
     const jumps = new StaticArray<ProgramCounter>(itemBytes > 0 ? data.length / itemBytes : 0);
 
     for (let i = 0; i < data.length; i += itemBytes) {
@@ -150,13 +143,12 @@ export class JumpTable {
   }
 
   toString(): string {
-    let v = 'JumpTable[';
-    for (let i = 0; i < this.jumps.length; i+=1) {
+    let v = "JumpTable[";
+    for (let i = 0; i < this.jumps.length; i += 1) {
       v += `${i} -> ${this.jumps[i]}, `;
     }
     return `${v}]`;
   }
-
 }
 
 export class Program {
@@ -172,24 +164,20 @@ export class Program {
   }
 }
 
-
 export function getAssembly(p: Program): string {
-  let v = '';
+  let v = "";
   const len = p.code.length;
-  for (let i = 0; i < len; i ++ ){
+  for (let i = 0; i < len; i++) {
     if (!p.mask.isInstruction(i)) {
-      throw new Error('We should iterate only over instructions!');
+      throw new Error("We should iterate only over instructions!");
     }
     const instruction = p.code[i];
     const iData = INSTRUCTIONS[instruction];
-    v += '\n';
+    v += "\n";
     v += changetype<string>(iData.namePtr);
 
     const argsLen = p.mask.argsLen(i);
-    const args = decodeArguments(
-      iData.kind,
-      p.code.subarray(i + 1, i + 1 + argsLen)
-    );
+    const args = decodeArguments(iData.kind, p.code.subarray(i + 1, i + 1 + argsLen));
     const argsArray = [args.a, args.b, args.c, args.d];
     const relevantArgs = <i32>RELEVANT_ARGS[iData.kind];
     for (let i = 0; i < relevantArgs; i++) {
@@ -200,9 +188,6 @@ export function getAssembly(p: Program): string {
   return v;
 }
 
-export function decodeArguments(
-  kind: Arguments,
-  data: Uint8Array,
-): Args {
+export function decodeArguments(kind: Arguments, data: Uint8Array): Args {
   return DECODERS[kind](data);
 }
