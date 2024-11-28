@@ -139,7 +139,7 @@ export const RUN: InstructionRun[] = [
   },
   // STORE_U32
   (args, registers, memory) => {
-    const fault = memory.setU32(args.c, registers[args.a]);
+    const fault = memory.setU32(args.b, registers[args.a]);
     return okOrFault(fault);
   },
   // AND
@@ -434,7 +434,7 @@ export const RUN: InstructionRun[] = [
   },
   // STORE_U16
   (args, registers, memory) => {
-    const fault = memory.setU16(args.c, <u16>(registers[args.a] & 0xff_ff));
+    const fault = memory.setU16(args.b, <u16>(registers[args.a] & 0xff_ff));
     return okOrFault(fault);
   },
   // REM_S
@@ -448,7 +448,7 @@ export const RUN: InstructionRun[] = [
   },
   // STORE_U8
   (args, registers, memory) => {
-    const fault = memory.setU8(args.c, <u8>(registers[args.a] & 0xff));
+    const fault = memory.setU8(args.b, <u8>(registers[args.a] & 0xff));
     return okOrFault(fault);
   },
   // SHLO_R_IMM_ALT

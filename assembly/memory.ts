@@ -1,3 +1,5 @@
+import { Access, Arena, PAGE_SIZE, PAGE_SIZE_SHIFT, Page, PageIndex } from "./memory-page";
+
 @unmanaged
 export class MaybePageFault {
   isFault: boolean = false;
@@ -10,40 +12,241 @@ export class Result {
   fault: MaybePageFault = new MaybePageFault();
 }
 
+class Chunks {
+  constructor(
+    public readonly fault: MaybePageFault,
+    public readonly first: Uint8Array = EMPTY_UINT8ARRAY,
+    public readonly second: Uint8Array = EMPTY_UINT8ARRAY,
+  ) {}
+}
+
+class ChunkBytes {
+  constructor(
+    public readonly fault: MaybePageFault,
+    public readonly bytes: StaticArray<u8> = new StaticArray(0),
+  ) {}
+}
+
+const MEMORY_SIZE = 0x1_000_000;
+
+const EMPTY_UINT8ARRAY = new Uint8Array(0);
+
+export class MemoryBuilder {
+  private readonly pages: Map<PageIndex, Page> = new Map();
+  private arena: Arena = new Arena(128);
+
+  setData(access: Access, address: u32, data: Uint8Array): void {
+    const pageIdx = u32(address >> PAGE_SIZE_SHIFT);
+    if (!this.pages.has(pageIdx)) {
+      const page = this.arena.acquire();
+      this.pages.set(pageIdx, new Page(access, page));
+    }
+
+    const relAddress = address % PAGE_SIZE;
+    const page = this.pages.get(pageIdx);
+    page.raw.data.set(data, relAddress);
+
+    if (relAddress + data.length > <u32>PAGE_SIZE) {
+      throw new Error("Unable to write data in builder. Exceeds the page!");
+    }
+  }
+
+  build(sbrkAddress: u32): Memory {
+    return new Memory(this.arena, this.pages, sbrkAddress);
+  }
+}
+
 export class Memory {
-  sbrk(_amount: u32): u32 {
-    throw new Error("Method not implemented.");
+  constructor(
+    private readonly arena: Arena,
+    private readonly pages: Map<PageIndex, Page> = new Map(),
+    private sbrkAddress: u32 = 0,
+  ) {}
+
+  pageDump(index: PageIndex): Uint8Array | null {
+    if (!this.pages.has(index)) {
+      return null;
+    }
+    return this.pages.get(index).raw.data;
   }
 
-  getU16(_address: u32): Result {
-    throw new Error("Method not implemented.");
+  free(): void {
+    const pages = this.pages.values();
+    for (let i = 0; i < pages.length; i++) {
+      this.arena.release(pages[i].raw);
+    }
+    this.pages.clear();
   }
 
-  getI16(_address: u32): Result {
-    throw new Error("Method not implemented.");
+  sbrk(amount: u32): u32 {
+    const newSbrk = this.sbrkAddress + amount;
+    if (newSbrk < this.sbrkAddress) {
+      console.log("Run out of memory!");
+    }
+    this.sbrkAddress = newSbrk;
+
+    const pageIdx = u32(newSbrk >> PAGE_SIZE_SHIFT);
+    const page = this.arena.acquire();
+    this.pages.set(pageIdx, new Page(Access.Write, page));
+    return newSbrk;
   }
 
-  getI8(_address: u32): Result {
-    throw new Error("Method not implemented.");
+  getU8(address: u32): Result {
+    const res = this.getBytes(Access.Read, address, 1);
+    const r = new Result();
+    r.fault = res.fault;
+    if (!res.fault.isFault) {
+      r.ok = res.bytes[0];
+    }
+    return r;
   }
 
-  getU8(_address: u32): Result {
-    throw new Error("Method not implemented.");
+  getU16(address: u32): Result {
+    const res = this.getBytes(Access.Read, address, 2);
+    const r = new Result();
+    r.fault = res.fault;
+    if (!res.fault.isFault) {
+      r.ok = res.bytes[0];
+      r.ok |= res.bytes[1] << 8;
+    }
+    return r;
   }
 
-  getU32(_address: u32): Result {
-    throw new Error("Method not implemented.");
+  getU32(address: u32): Result {
+    const res = this.getBytes(Access.Read, address, 4);
+    const r = new Result();
+    r.fault = res.fault;
+    if (!res.fault.isFault) {
+      r.ok = res.bytes[0];
+      r.ok |= res.bytes[1] << 8;
+      r.ok |= res.bytes[2] << 16;
+      r.ok |= res.bytes[3] << 24;
+    }
+    return r;
   }
 
-  setU8(_address: u32, _value: u8): MaybePageFault {
-    throw new Error("Method not implemented.");
+  getI8(address: u32): Result {
+    const res = this.getBytes(Access.Read, address, 1);
+    const r = new Result();
+    r.fault = res.fault;
+    if (!res.fault.isFault) {
+      r.ok = i8(res.bytes[0]);
+    }
+    return r;
   }
 
-  setU16(_address: u32, _value: u16): MaybePageFault {
-    throw new Error("Method not implemented.");
+  getI16(address: u32): Result {
+    const res = this.getBytes(Access.Read, address, 2);
+    const r = new Result();
+    r.fault = res.fault;
+    if (!res.fault.isFault) {
+      r.ok = i32(res.bytes[0] + (res.bytes[1] << 8));
+    }
+    return r;
   }
 
-  setU32(_address: u32, _value: u32): MaybePageFault {
-    throw new Error("Method not implemented.");
+  setU8(address: u32, value: u8): MaybePageFault {
+    const res = this.getChunks(Access.Write, address, 1);
+    if (res.fault.isFault) {
+      return res.fault;
+    }
+    res.first[0] = value;
+    return res.fault;
   }
+
+  setU16(address: u32, value: u16): MaybePageFault {
+    const res = this.getChunks(Access.Write, address, 2);
+    if (res.fault.isFault) {
+      return res.fault;
+    }
+    res.first[0] = value & 0xff;
+    if (res.first.length > 1) {
+      res.first[1] = value >> 8;
+    } else {
+      res.second[0] = value >> 8;
+    }
+    return res.fault;
+  }
+
+  setU32(address: u32, value: u32): MaybePageFault {
+    const res = this.getChunks(Access.Write, address, 4);
+    if (res.fault.isFault) {
+      return res.fault;
+    }
+
+    let v = value;
+    const len = res.first.length;
+
+    for (let i = 0; i < len; i++) {
+      res.first[i] = v & 0xff;
+      v = v >> 8;
+    }
+
+    for (let i = 0; i < res.second.length; i++) {
+      res.second[i] = v & 0xff;
+      v = v >> 8;
+    }
+
+    return res.fault;
+  }
+
+  private getChunks(access: Access, address: u32, bytes: u8): Chunks {
+    const pageIdx = u32(address >> PAGE_SIZE_SHIFT);
+
+    if (!this.pages.has(pageIdx)) {
+      return fault(address);
+    }
+
+    const page = this.pages.get(pageIdx);
+    if (!page.can(access)) {
+      return fault(address);
+    }
+
+    const secondPageIdx = ((address + u32(bytes)) % MEMORY_SIZE) >> PAGE_SIZE_SHIFT;
+    const relativeAddress = address % PAGE_SIZE;
+
+    // everything is on one page - easy case
+    if (secondPageIdx === pageIdx) {
+      const first = page.raw.data.subarray(relativeAddress, relativeAddress + <u32>bytes);
+      return new Chunks(new MaybePageFault(), first);
+    }
+
+    // fetch the second page and check access
+    const secondPage = this.pages.get(secondPageIdx);
+    if (!page.can(access)) {
+      return fault(address);
+    }
+
+    const firstChunk = page.raw.data.subarray(relativeAddress);
+    const secondChunk = secondPage.raw.data.subarray(0, relativeAddress + u32(bytes) - PAGE_SIZE);
+    return new Chunks(new MaybePageFault(), firstChunk, secondChunk);
+  }
+
+  private getBytes(access: Access, address: u32, bytes: u8): ChunkBytes {
+    const res = this.getChunks(access, address, bytes);
+    if (res.fault.isFault) {
+      return new ChunkBytes(res.fault);
+    }
+    const data = getBytes(bytes, res.first, res.second);
+    return new ChunkBytes(res.fault, data);
+  }
+}
+
+function getBytes(bytes: u8, first: Uint8Array, second: Uint8Array): StaticArray<u8> {
+  const res = new StaticArray<u8>(bytes);
+  const len = first.length;
+  for (let i = 0; i < len; i++) {
+    res[i] = first[i];
+  }
+  for (let i = 0; i < second.length; i++) {
+    res[len + i] = second[i];
+  }
+  return res;
+}
+
+function fault(address: u32): Chunks {
+  const r = new MaybePageFault();
+  r.isFault = true;
+  r.fault = address;
+  return new Chunks(r);
 }
