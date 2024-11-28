@@ -2,8 +2,15 @@
 <html lang="en">
 <head>
 <script type="module">
-import { add } from "./build/release.js";
-document.body.innerText = add(1, 2);
+document.body.innerHTML = 'Error loading';
+import { example } from "./build/release.js";
+try {
+  console.log(example());
+  document.body.innerHTML = 'OK!';
+} catch (e) {
+  console.error(e);
+  document.body.innerHTML = e;
+}
 </script>
 </head>
 <body></body>
