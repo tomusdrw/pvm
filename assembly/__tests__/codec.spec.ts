@@ -2,7 +2,9 @@ import { readVarU32 } from "../codec";
 
 describe("codec", () => {
   it("should read variable length values", () => {
-    function test(data: u8[], value: u32, offset: usize): void {
+    function test(d: u8[], value: u32, offset: usize): void {
+      const data = new Uint8Array(d.length);
+      data.set(d, 0);
       expect(readVarU32(data).value).toBe(value);
       expect(readVarU32(data).offset).toBe(offset);
     }
