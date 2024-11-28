@@ -55,7 +55,7 @@ export const INSTRUCTIONS = [
   instruction("LOAD_IND_I16", Arguments.TwoRegOneImm, 1),
   instruction("MUL",Arguments.ThreeReg, 1),
   instruction("MUL_IMM", Arguments.TwoRegOneImm, 1),
-  instruction("SET_LT_U",Arguments.ThreeReg, 1),
+  instruction("SET_LT_U", Arguments.ThreeReg, 1),
   instruction("LOAD_IND_U16", Arguments.TwoRegOneImm, 1),
   instruction("STORE_IMM_U32",Arguments.TwoImm, 1),
   instruction("SET_GT_U_IMM", Arguments.TwoRegOneImm, 1),

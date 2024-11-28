@@ -53,6 +53,17 @@ export class Mask {
     }
   }
 
+  isInstruction(index: ProgramCounter): boolean {
+    return this.bytesToSkip[index] === 0;
+  }
+
+  argsLen(i: u32): u8 {
+    if (i + 1 < <u32>this.bytesToSkip.length) {
+      return this.bytesToSkip[i + 1];
+    }
+    return 0;
+  }
+
   toString(): string {
     let v = 'Mask[';
     for (let i = 0; i < this.bytesToSkip.length; i+=1) {
@@ -151,7 +162,7 @@ export function getAssembly(p: Program): string {
   let v = '';
   const len = p.code.length;
   for (let i = 0; i < len; i ++ ){
-    if (p.mask.bytesToSkip[i] !== 0) {
+    if (!p.mask.isInstruction(i)) {
       throw new Error('We should iterate only over instructions!');
     }
     const instruction = p.code[i];
@@ -159,7 +170,7 @@ export function getAssembly(p: Program): string {
     v += '\n';
     v += changetype<string>(iData.namePtr);
 
-    const argsLen = i + 1 < len ? p.mask.bytesToSkip[i + 1] : 0;
+    const argsLen = p.mask.argsLen(i);
     const args = decodeArguments(
       iData.kind,
       p.code.subarray(i + 1, i + 1 + argsLen)
