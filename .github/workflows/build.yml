@@ -29,3 +29,10 @@ jobs:
     - run: npm run qa
     - run: npm run build --if-present
     - run: npm test --if-present
+
+    - name: Checkout JAM test vectors
+      uses: actions/checkout@v4
+      with:
+        repository: FluffyLabs/jamtestvectors
+        path: "./jamtestvectors"
+    - run: npm start ./jamtestvectors/pvm/programs/*.json

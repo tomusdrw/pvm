@@ -30,11 +30,17 @@ $ npm ci
 To build the WASM modules (in `./build/{release,debug}.wasm`):
 
 ```
-$ npm run asbuild
+$ npm build
 ```
 
 To run the example in the browser at [http://localhost:3000](http://localhost:3000).
 
 ```
-$ npm start
+$ npm run web
+```
+
+To run JSON test vectors.
+
+```
+$ npm start ./path/to/tests/*.json
 ```
