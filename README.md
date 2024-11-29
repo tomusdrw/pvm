@@ -5,7 +5,7 @@ Assembly Script implementation of the JAM PVM (32bit).
 #### Todo
 
 - [x] Memory
-- [ ] [JAM tests](https://github.com/w3f/jamtestvectors/pull/3) compatibility
+- [x] [JAM tests](https://github.com/w3f/jamtestvectors/pull/3) compatibility
 - [ ] 64-bit & new instructions ([GrayPaper v0.5.0](https://graypaper.fluffylabs.dev))
 
 ### Why?
