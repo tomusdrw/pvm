@@ -107,7 +107,7 @@ export class Memory {
     r.fault = res.fault;
     if (!res.fault.isFault) {
       r.ok = res.bytes[0];
-      r.ok |= <u32>(res.bytes[1]) << 8;
+      r.ok |= (<u32>res.bytes[1]) << 8;
     }
     return r;
   }
@@ -118,9 +118,9 @@ export class Memory {
     r.fault = res.fault;
     if (!res.fault.isFault) {
       r.ok = res.bytes[0];
-      r.ok |= <u32>(res.bytes[1]) << 8;
-      r.ok |= <u32>(res.bytes[2]) << 16;
-      r.ok |= <u32>(res.bytes[3]) << 24;
+      r.ok |= (<u32>res.bytes[1]) << 8;
+      r.ok |= (<u32>res.bytes[2]) << 16;
+      r.ok |= (<u32>res.bytes[3]) << 24;
     }
     return r;
   }

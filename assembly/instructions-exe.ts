@@ -168,7 +168,7 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_U_IMM
   (args, registers) => {
-    registers[args.b] = (registers[args.a] < args.c) ? 1 : 0;
+    registers[args.b] = registers[args.a] < args.c ? 1 : 0;
     return ok();
   },
   // XOR
@@ -222,7 +222,7 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_U
   (args, registers) => {
-    registers[args.c] = (registers[args.b] < registers[args.a]) ? 1 : 0;
+    registers[args.c] = registers[args.b] < registers[args.a] ? 1 : 0;
     return ok();
   },
   // LOAD_IND_U16
@@ -352,7 +352,7 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_S_IMM
   (args, registers) => {
-    registers[args.b] = (i32(registers[args.a]) < i32(args.c))? 1 : 0;
+    registers[args.b] = i32(registers[args.a]) < i32(args.c) ? 1 : 0;
     return ok();
   },
   // MUL_UPPER_U_U
@@ -362,7 +362,7 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_S
   (args, registers) => {
-    registers[args.c] = (i32(registers[args.b]) < i32(registers[args.a])) ? 1 : 0;
+    registers[args.c] = i32(registers[args.b]) < i32(registers[args.a]) ? 1 : 0;
     return ok();
   },
   // BRANCH_LE_U_IMM
@@ -402,7 +402,7 @@ export const RUN: InstructionRun[] = [
     const a = i32(registers[args.a]);
     if (a === 0) {
       registers[args.c] = 2 ** 32 - 1;
-    } else if (a === -1 && b == i32.MIN_VALUE) {
+    } else if (a === -1 && b === i32.MIN_VALUE) {
       registers[args.c] = b;
     } else {
       registers[args.c] = b / a;

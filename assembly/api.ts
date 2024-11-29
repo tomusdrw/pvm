@@ -1,4 +1,4 @@
-import {InitialChunk, InitialPage, buildMemory} from "./api-generic";
+import { InitialChunk, InitialPage, buildMemory } from "./api-generic";
 import { Decoder } from "./codec";
 import { Gas } from "./gas";
 import { Interpreter, Status } from "./interpreter";
@@ -162,7 +162,7 @@ function readChunks(chunks: Uint8Array): InitialChunk[] {
     c.address = codec.u32();
     const len = codec.u32();
     const data = codec.bytes(len);
-    for (let i:u32 = 0; i < len; i++) {
+    for (let i: u32 = 0; i < len; i++) {
       c.data.push(data[i]);
     }
     res.push(c);

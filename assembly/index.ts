@@ -1,4 +1,4 @@
-import {VmInput, getAssembly, runVm} from "./api-generic";
+import { VmInput, getAssembly, runVm } from "./api-generic";
 import { decodeProgram } from "./program";
 
 export * from "./api";
@@ -10,7 +10,7 @@ export function exampleGetAssembly(program: u8[]): string {
 }
 
 export function exampleRun(program: u8[]): void {
-  const input = new VmInput;
+  const input = new VmInput();
   input.registers[7] = 9;
   input.gas = 10_000;
   input.program = program;

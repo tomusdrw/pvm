@@ -1,10 +1,10 @@
-import {RELEVANT_ARGS} from "./arguments";
-import {INSTRUCTIONS} from "./instructions";
-import {Interpreter, Status} from "./interpreter";
-import {Memory, MemoryBuilder} from "./memory";
-import {Access, PAGE_SIZE} from "./memory-page";
-import {Program, decodeArguments, decodeProgram} from "./program";
-import {NO_OF_REGISTERS, Registers} from "./registers";
+import { RELEVANT_ARGS } from "./arguments";
+import { INSTRUCTIONS } from "./instructions";
+import { Interpreter, Status } from "./interpreter";
+import { Memory, MemoryBuilder } from "./memory";
+import { Access, PAGE_SIZE } from "./memory-page";
+import { Program, decodeArguments, decodeProgram } from "./program";
+import { NO_OF_REGISTERS, Registers } from "./registers";
 
 export class InitialPage {
   address: u32 = 0;
@@ -49,10 +49,8 @@ export function getAssembly(p: Program): string {
     const end = i + 1 + argsLen;
     if (end > len) {
       const name = changetype<string>(iData.namePtr);
-      throw new Error(
-        `Invalid program - code is not long enough.`
-        + `Expected: ${argsLen} for ${name} at ${i} (${end} > ${len})`
-      );
+      const intro = "Invalid program - code is not long enough";
+      throw new Error(`${intro} Expected: ${argsLen} for ${name} at ${i} (${end} > ${len})`);
     }
 
     const args = decodeArguments(iData.kind, p.code.subarray(i + 1, end));
@@ -96,7 +94,7 @@ export function runVm(input: VmInput, logs: boolean = false): VmOutput {
 
     isOk = int.nextStep();
   }
-  const output = new VmOutput;
+  const output = new VmOutput();
   output.status = int.status;
   output.registers = int.registers.slice(0);
   output.pc = int.pc;
@@ -109,7 +107,7 @@ export function getOutputChunks(memory: Memory): InitialChunk[] {
   const chunks: InitialChunk[] = [];
   const pages = memory.pages.keys();
   let currentChunk: InitialChunk | null = null;
-  for (let i=0; i < pages.length; i++) {
+  for (let i = 0; i < pages.length; i++) {
     const pageIdx = pages[i];
     const page = memory.pages.get(pageIdx);
 
@@ -146,7 +144,7 @@ export function buildMemory(pages: InitialPage[], chunks: InitialChunk[]): Memor
     const initChunk = chunks[i];
     // access should not matter now, since we created the pages already.
     const data = new Uint8Array(initChunk.data.length);
-    for (let i=0; i < data.length; i++) {
+    for (let i = 0; i < data.length; i++) {
       data[i] = initChunk.data[i];
     }
     builder.setData(Access.None, initChunk.address, data);
