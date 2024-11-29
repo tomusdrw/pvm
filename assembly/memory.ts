@@ -59,7 +59,7 @@ export class MemoryBuilder {
 export class Memory {
   constructor(
     private readonly arena: Arena,
-    private readonly pages: Map<PageIndex, Page> = new Map(),
+    public readonly pages: Map<PageIndex, Page> = new Map(),
     private sbrkAddress: u32 = 0,
   ) {}
 
@@ -107,7 +107,7 @@ export class Memory {
     r.fault = res.fault;
     if (!res.fault.isFault) {
       r.ok = res.bytes[0];
-      r.ok |= res.bytes[1] << 8;
+      r.ok |= <u32>(res.bytes[1]) << 8;
     }
     return r;
   }
@@ -118,9 +118,9 @@ export class Memory {
     r.fault = res.fault;
     if (!res.fault.isFault) {
       r.ok = res.bytes[0];
-      r.ok |= res.bytes[1] << 8;
-      r.ok |= res.bytes[2] << 16;
-      r.ok |= res.bytes[3] << 24;
+      r.ok |= <u32>(res.bytes[1]) << 8;
+      r.ok |= <u32>(res.bytes[2]) << 16;
+      r.ok |= <u32>(res.bytes[3]) << 24;
     }
     return r;
   }
@@ -140,7 +140,12 @@ export class Memory {
     const r = new Result();
     r.fault = res.fault;
     if (!res.fault.isFault) {
-      r.ok = i32(res.bytes[0] + (res.bytes[1] << 8));
+      const l = u32(res.bytes[0]);
+      const h = u32(res.bytes[1]) << 8;
+      r.ok = l | h;
+      if ((l & 0x80) > 0) {
+        r.ok |= 0xffff_0000;
+      }
     }
     return r;
   }

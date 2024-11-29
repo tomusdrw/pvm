@@ -1,7 +1,7 @@
+import {InitialChunk, InitialPage, buildMemory} from "./api-generic";
 import { Decoder } from "./codec";
 import { Gas } from "./gas";
 import { Interpreter, Status } from "./interpreter";
-import { Memory, MemoryBuilder } from "./memory";
 import { Access, PAGE_SIZE } from "./memory-page";
 import { decodeProgram } from "./program";
 import { NO_OF_REGISTERS, Registers } from "./registers";
@@ -27,7 +27,8 @@ export function resetGenericWithMemory(
   const p = decodeProgram(program);
   const registers: Registers = new StaticArray(NO_OF_REGISTERS);
   fillRegisters(registers, flatRegisters);
-  const memory = buildMemory(pageMap, chunks);
+
+  const memory = buildMemory(readPages(pageMap), readChunks(chunks));
 
   const int = new Interpreter(p, registers, memory);
   int.gas.set(initialGas);
@@ -140,16 +141,6 @@ function fillRegisters(registers: Registers, flat: u8[]): void {
   }
 }
 
-class InitialPage {
-  address: u32 = 0;
-  length: u32 = 0;
-  access: Access = Access.None;
-}
-class InitialChunk {
-  address: u32 = 0;
-  data: Uint8Array = new Uint8Array(0);
-}
-
 function readPages(pageMap: Uint8Array): InitialPage[] {
   const pages: InitialPage[] = [];
   const codec = new Decoder(pageMap);
@@ -170,31 +161,11 @@ function readChunks(chunks: Uint8Array): InitialChunk[] {
     const c = new InitialChunk();
     c.address = codec.u32();
     const len = codec.u32();
-    c.data = codec.bytes(len);
+    const data = codec.bytes(len);
+    for (let i:u32 = 0; i < len; i++) {
+      c.data.push(data[i]);
+    }
     res.push(c);
   }
   return res;
-}
-
-function buildMemory(pageMap: Uint8Array, flatChunks: Uint8Array): Memory {
-  console.log(`Got page: ${pageMap}`);
-  console.log(`Got chunks: ${flatChunks}`);
-  const pages = readPages(pageMap);
-  const chunks = readChunks(flatChunks);
-
-  const builder = new MemoryBuilder();
-  for (let i = 0; i < pages.length; i++) {
-    const initPage = pages[i];
-    console.log(`setting page: ${initPage.address}..+${initPage.length}`);
-    builder.setData(initPage.access, initPage.address, new Uint8Array(initPage.length));
-  }
-
-  for (let i = 0; i < chunks.length; i++) {
-    const initChunk = chunks[i];
-    console.log(`setting initial chunk: ${initChunk.address}..+${initChunk.data.length}`);
-    // access should not matter now, since we created the pages already.
-    builder.setData(Access.None, initChunk.address, initChunk.data);
-  }
-
-  return builder.build(0);
 }

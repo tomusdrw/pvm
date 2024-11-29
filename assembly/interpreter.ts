@@ -70,7 +70,12 @@ export class Interpreter {
 
     // get args and invoke instruction
     const argsLen = this.program.mask.argsLen(pc);
-    const args = decodeArguments(iData.kind, this.program.code.subarray(pc + 1, pc + 1 + argsLen));
+    const end = pc + 1 + argsLen;
+    if (end > <u32>this.program.code.length) {
+      this.status = Status.PANIC;
+      return false;
+    }
+    const args = decodeArguments(iData.kind, this.program.code.subarray(pc + 1, end));
 
     const exe = RUN[instruction];
     const outcome = exe(args, this.registers, this.memory);
@@ -112,6 +117,7 @@ export class Interpreter {
           return false;
         }
         if (outcome.result === Result.FAULT) {
+          this.gas.sub(1);
           this.status = Status.FAULT;
           this.exitCode = outcome.exitCode;
           return false;

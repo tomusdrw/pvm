@@ -15,7 +15,7 @@ export const RUN: InstructionRun[] = [
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
     const result = memory.getU32(address);
-    if (result.fault.isFault) {
+    if (!result.fault.isFault) {
       registers[args.b] = result.ok;
     }
     return okOrFault(result.fault);
@@ -67,7 +67,7 @@ export const RUN: InstructionRun[] = [
   // LOAD_U32
   (args, registers, memory) => {
     const result = memory.getU32(args.b);
-    if (result.fault.isFault) {
+    if (!result.fault.isFault) {
       registers[args.a] = result.ok;
     }
     return okOrFault(result.fault);
@@ -76,7 +76,7 @@ export const RUN: InstructionRun[] = [
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
     const result = memory.getU8(address);
-    if (result.fault.isFault) {
+    if (!result.fault.isFault) {
       registers[args.b] = result.ok;
     }
     return okOrFault(result.fault);
@@ -125,14 +125,14 @@ export const RUN: InstructionRun[] = [
   },
   // SUB
   (args, registers) => {
-    registers[args.c] = registers[args.a] - registers[args.b];
+    registers[args.c] = registers[args.b] - registers[args.a];
     return ok();
   },
   // LOAD_IND_I8
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
     const result = memory.getI8(address);
-    if (result.fault.isFault) {
+    if (!result.fault.isFault) {
       registers[args.b] = result.ok;
     }
     return okOrFault(result.fault);
@@ -157,7 +157,7 @@ export const RUN: InstructionRun[] = [
   // SHAR_R_IMM
   (args, registers) => {
     const shift = args.c;
-    registers[args.b] = registers[args.a] >> (shift % MAX_SHIFT);
+    registers[args.b] = i32(registers[args.a]) >> (shift % MAX_SHIFT);
     return ok();
   },
   // STORE_IMM_IND_U8
@@ -168,7 +168,7 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_U_IMM
   (args, registers) => {
-    registers[args.b] = registers[args.a] < args.c ? 1 : 0;
+    registers[args.b] = (registers[args.a] < args.c) ? 1 : 0;
     return ok();
   },
   // XOR
@@ -205,7 +205,7 @@ export const RUN: InstructionRun[] = [
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
     const result = memory.getI16(address);
-    if (result.fault.isFault) {
+    if (!result.fault.isFault) {
       registers[args.b] = result.ok;
     }
     return okOrFault(result.fault);
@@ -222,14 +222,14 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_U
   (args, registers) => {
-    registers[args.c] = registers[args.a] < registers[args.b] ? 1 : 0;
+    registers[args.c] = (registers[args.b] < registers[args.a]) ? 1 : 0;
     return ok();
   },
   // LOAD_IND_U16
   (args, registers, memory) => {
     const address = registers[args.a] + args.c;
     const result = memory.getU16(address);
-    if (result.fault.isFault) {
+    if (!result.fault.isFault) {
       registers[args.b] = result.ok;
     }
     return okOrFault(result.fault);
@@ -247,13 +247,13 @@ export const RUN: InstructionRun[] = [
   },
   // NEG_ADD_IMM
   (args, registers) => {
-    const sum = registers[args.a] - args.c;
+    const sum = args.c - registers[args.a];
     registers[args.b] = sum;
     return ok();
   },
   // BRANCH_GE_U
   (args, registers) => {
-    if (registers[args.a] >= registers[args.b]) {
+    if (registers[args.b] >= registers[args.a]) {
       return staticJump(args.c);
     }
     return ok();
@@ -266,7 +266,7 @@ export const RUN: InstructionRun[] = [
   },
   // BRANCH_GE_S
   (args, registers) => {
-    if (<i32>registers[args.a] >= <i32>registers[args.b]) {
+    if (<i32>registers[args.b] >= <i32>registers[args.a]) {
       return staticJump(args.c);
     }
     return ok();
@@ -294,14 +294,14 @@ export const RUN: InstructionRun[] = [
   },
   // BRANCH_LT_U
   (args, registers) => {
-    if (registers[args.a] < registers[args.b]) {
+    if (registers[args.b] < registers[args.a]) {
       return staticJump(args.c);
     }
     return ok();
   },
   // BRANCH_LT_U
   (args, registers) => {
-    if (<i32>registers[args.a] < <i32>registers[args.b]) {
+    if (<i32>registers[args.b] < <i32>registers[args.a]) {
       return staticJump(args.c);
     }
     return ok();
@@ -352,7 +352,7 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_S_IMM
   (args, registers) => {
-    registers[args.b] = <i32>registers[args.a] < <i32>args.c ? 1 : 0;
+    registers[args.b] = (i32(registers[args.a]) < i32(args.c))? 1 : 0;
     return ok();
   },
   // MUL_UPPER_U_U
@@ -362,7 +362,7 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_S
   (args, registers) => {
-    registers[args.c] = <i32>registers[args.a] < <i32>registers[args.b] ? 1 : 0;
+    registers[args.c] = (i32(registers[args.b]) < i32(registers[args.a])) ? 1 : 0;
     return ok();
   },
   // BRANCH_LE_U_IMM
@@ -375,7 +375,7 @@ export const RUN: InstructionRun[] = [
   // LOAD_U8
   (args, registers, memory) => {
     const result = memory.getU8(args.b);
-    if (result.fault.isFault) {
+    if (!result.fault.isFault) {
       registers[args.a] = result.ok;
     }
     return okOrFault(result.fault);
@@ -398,10 +398,14 @@ export const RUN: InstructionRun[] = [
   },
   // DIV_S
   (args, registers) => {
-    if (registers[args.a] === 0) {
+    const b = i32(registers[args.b]);
+    const a = i32(registers[args.a]);
+    if (a === 0) {
       registers[args.c] = 2 ** 32 - 1;
+    } else if (a === -1 && b == i32.MIN_VALUE) {
+      registers[args.c] = b;
     } else {
-      registers[args.c] = <i32>registers[args.b] / <i32>registers[args.a];
+      registers[args.c] = b / a;
     }
     return ok();
   },
@@ -413,7 +417,7 @@ export const RUN: InstructionRun[] = [
   // LOAD_I16
   (args, registers, memory) => {
     const result = memory.getI16(args.b);
-    if (result.fault.isFault) {
+    if (!result.fault.isFault) {
       registers[args.a] = result.ok;
     }
     return okOrFault(result.fault);
@@ -469,7 +473,7 @@ export const RUN: InstructionRun[] = [
   // LOAD_I8
   (args, registers, memory) => {
     const result = memory.getI8(args.b);
-    if (result.fault.isFault) {
+    if (!result.fault.isFault) {
       registers[args.a] = result.ok;
     }
     return okOrFault(result.fault);
@@ -483,7 +487,7 @@ export const RUN: InstructionRun[] = [
   // LOAD_U16
   (args, registers, memory) => {
     const result = memory.getU16(args.b);
-    if (result.fault.isFault) {
+    if (!result.fault.isFault) {
       registers[args.a] = result.ok;
     }
     return okOrFault(result.fault);
@@ -491,7 +495,7 @@ export const RUN: InstructionRun[] = [
   // SHAR_R
   (args, registers) => {
     const shift = registers[args.a];
-    registers[args.c] = registers[args.b] >> (shift % MAX_SHIFT);
+    registers[args.c] = i32(registers[args.b]) >> (shift % MAX_SHIFT);
     return ok();
   },
   // ECALLI
@@ -507,7 +511,7 @@ export const RUN: InstructionRun[] = [
   // SHAR_R_IMM_ALT
   (args, registers) => {
     const shift = registers[args.a];
-    registers[args.b] = args.c >> (shift % MAX_SHIFT);
+    registers[args.b] = i32(args.c) >> (shift % MAX_SHIFT);
     return ok();
   },
   // MUL_UPPER_S_U
