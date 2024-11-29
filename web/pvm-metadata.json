@@ -1,0 +1,10 @@
+{
+  "name": "ananas",
+  "version": "0.0.1",
+  "capabilities": {
+    "resetJAM": false,
+    "resetGeneric": true,
+    "resetPolkaVM": false
+  },
+  "wasmBlobUrl": "./build/release.wasm"
+}
