@@ -1,4 +1,4 @@
-import { Args, Arguments, DECODERS, RELEVANT_ARGS } from "./arguments";
+import { Args, Arguments, DECODERS } from "./arguments";
 import { Decoder } from "./codec";
 import { INSTRUCTIONS } from "./instructions";
 
@@ -162,30 +162,6 @@ export class Program {
   toString(): string {
     return `Program { code: ${this.code}, mask: ${this.mask}, jumpTable: ${this.jumpTable}, basicBlocks: ${this.basicBlocks} }`;
   }
-}
-
-export function getAssembly(p: Program): string {
-  let v = "";
-  const len = p.code.length;
-  for (let i = 0; i < len; i++) {
-    if (!p.mask.isInstruction(i)) {
-      throw new Error("We should iterate only over instructions!");
-    }
-    const instruction = p.code[i];
-    const iData = INSTRUCTIONS[instruction];
-    v += "\n";
-    v += changetype<string>(iData.namePtr);
-
-    const argsLen = p.mask.argsLen(i);
-    const args = decodeArguments(iData.kind, p.code.subarray(i + 1, i + 1 + argsLen));
-    const argsArray = [args.a, args.b, args.c, args.d];
-    const relevantArgs = <i32>RELEVANT_ARGS[iData.kind];
-    for (let i = 0; i < relevantArgs; i++) {
-      v += ` ${argsArray[i]}, `;
-    }
-    i += argsLen;
-  }
-  return v;
 }
 
 export function decodeArguments(kind: Arguments, data: Uint8Array): Args {

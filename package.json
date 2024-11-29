@@ -1,7 +1,7 @@
 {
 	"name": "anan-as",
 	"version": "1.0.0",
-	"main": "index.js",
+	"main": "./bin/index.js",
 	"scripts": {
 		"asbuild": "npm run asbuild:debug && npm run asbuild:release",
 		"asbuild:debug": "asc assembly/index.ts --target debug",
@@ -13,7 +13,9 @@
 		"qa": "biome ci",
 		"qa-fix": "npm run format; npm run lint",
 		"prestart": "npm run build",
-		"start": "npx live-server ./web"
+		"preweb": "npm run build",
+		"web": "npx live-server ./web",
+		"start": "node ./bin/index.js"
 	},
 	"keywords": [],
 	"author": "Fluffy Labs",

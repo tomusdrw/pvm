@@ -5,7 +5,7 @@ Assembly Script implementation of the JAM PVM (32bit).
 #### Todo
 
 - [x] Memory
-- [ ] [JAM tests](https://github.com/w3f/jamtestvectors/pull/3) compatibility
+- [x] [JAM tests](https://github.com/w3f/jamtestvectors/pull/3) compatibility
 - [ ] 64-bit & new instructions ([GrayPaper v0.5.0](https://graypaper.fluffylabs.dev))
 
 ### Why?
@@ -30,11 +30,17 @@ $ npm ci
 To build the WASM modules (in `./build/{release,debug}.wasm`):
 
 ```
-$ npm run asbuild
+$ npm build
 ```
 
 To run the example in the browser at [http://localhost:3000](http://localhost:3000).
 
 ```
-$ npm start
+$ npm run web
+```
+
+To run JSON test vectors.
+
+```
+$ npm start ./path/to/tests/*.json
 ```
