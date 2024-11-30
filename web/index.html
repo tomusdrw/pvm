@@ -24,6 +24,9 @@ body {
   flex-direction: column;
   gap: 1rem;
 }
+#file {
+  display: none;
+}
 button {
   padding: 1rem;
   cursor: pointer;
@@ -31,34 +34,100 @@ button {
 textarea {
   padding: 1rem;
 }
+textarea.error {
+  border: 2px solid #e22;
+}
 pre {
   border: 1px solid #ccc;
   background: #ddd;
   padding: 1rem;
 }
+#run {
+  background-color: #5c7;
+}
+.actions {
+  display: flex;
+  gap: 1rem;
+  flex-direction: row;
+}
+.actions > * {
+  flex: 1;
+}
 </style>
 <script type="module" defer>
-import { exampleGetAssembly, exampleRun } from "./build/release.js";
+import { disassemble, run, InputKind } from "./build/release.js";
+const $upload = document.querySelector('#upload');
 const $code = document.querySelector('#code');
+const $file = document.querySelector('#file');
 const $run = document.querySelector('#run');
+const $dis = document.querySelector('#disassemble');
 const $out = document.querySelector('#output');
+const $spi = document.querySelector('#spi');
 
-$run.addEventListener('click', () => {
-  $out.classList.remove('error');
-  const markError = () => {
-    $out.classList.add('error');
+$file.addEventListener('change', (ev) => {
+  if (!ev.target?.files?.length) {
+    return;
+  }
+
+  const f = new FileReader();
+  f.onload = (e) => {
+    const data = Array.from(new Uint8Array(e.target?.result));
+    $code.value = '0x' + data.map(b => b.toString(16).padStart(2, '0')).join('');
+    $spi.checked = true;
+    $run.click();
   };
+  f.readAsArrayBuffer(ev.target.files[0]);
+});
+
+$upload.addEventListener('click', () => {
+  $file.click();
+});
+$run.addEventListener('click', () => {
+  execute(true);
+});
+$dis.addEventListener('click', () => {
+  execute(false);
+});
+$run.click();
+
+function parseCode(code) {
+  if (code.startsWith('0x')) {
+    if (code.length % 2 !== 0) {
+      throw new Error('uneven number of nibbles');
+    }
+    const program = [];
+    for (let i = 2; i < code.length; i += 2) {
+       const v = `0x${code[i]}${code[i+1]}`;
+       const d = Number(v);
+       if (Number.isNaN(d)) {
+        throw new Error(`invalid hex value: ${v}`);
+       }
+       program.push(d);
+    }
+    return program;
+  }
+
+  return JSON.parse(code);
+}
+
+function execute(shouldRun = false) {
+  $code.classList.remove('error');
+  const markError = () => {
+    $code.classList.add('error');
+  };
+  const isSpi = $spi.checked;
+  const kind = isSpi ? InputKind.SPI : InputKind.Generic;
   let program;
   try {
-    program = JSON.parse($code.value);
+    program = parseCode($code.value);
   } catch (e) {
     console.error(e);
-    $out.innerHTML = `Not a valid JSON: ${e}`;
+    $out.innerHTML = `Not a valid JSON or HEX: ${e}`;
     markError();
     return;
   }
   try {
-    const asm = exampleGetAssembly(program);
+    const asm = disassemble(program, kind);
     $out.innerHTML = asm;
   } catch (e) {
     console.error(e);
@@ -67,16 +136,19 @@ $run.addEventListener('click', () => {
     return;
   }
 
+  if (!shouldRun) {
+    return;
+  }
+
   try {
-    exampleRun(program);
+    run(program, kind);
     $out.innerHTML += `\n\n Run OK!`;
   } catch (e) {
     console.error(e);
     $out.innerHTML += `\n\n Run error: ${e}`;
     markError();
   }
-});
-$run.click();
+}
 </script>
 </head>
 <body>
@@ -87,12 +159,20 @@ $run.click();
     or
     <a href="./build/debug.wasm">debug.wasm</a>|<a href="./build/debug.wat">wat</a>
   </p>
+  <label>
+    <input type="checkbox" id="spi"> JAM SPI
+  </label>
   <textarea id="code" rows="10">
 [
   0, 0, 33, 4, 8, 1, 4, 9, 1, 5, 3, 0, 2, 119, 255, 7, 7, 12, 82, 138, 8, 152, 8, 82, 169, 5, 243, 82, 135, 4, 8, 4, 9, 17, 19, 0, 73, 147, 82, 213, 0
 ]
   </textarea>
-  <button id="run">Disassemble &amp; Run</button>
+  <div class="actions">
+    <button id="upload">📂 Upload PVM file</button>
+    <input id="file" type="file" placeholder="Upload a PVM file" />
+    <button id="disassemble">🤖 Disassemble</button>
+    <button id="run">💻 Disassemble &amp; Run</button>
+  </div>
   <pre id="output">
   </pre>
   <a href="https://pvm.fluffylabs.dev">Looking for a better disassembler for PVM?</a>

@@ -1,16 +1,47 @@
 import { Args, Arguments, DECODERS } from "./arguments";
 import { Decoder } from "./codec";
-import { INSTRUCTIONS } from "./instructions";
+import { INSTRUCTIONS, MISSING_INSTRUCTION } from "./instructions";
 
 export type ProgramCounter = u32;
 
-export function decodeProgram(program: u8[]): Program {
-  const p = new Uint8Array(program.length);
-  p.set(program, 0);
-  const decoder = new Decoder(p);
+export function decodeSpi(data: Uint8Array): Program {
+  const decoder = new Decoder(data);
+
+  const roLength = decoder.u24();
+  const rwLength = decoder.u24();
+  const _heapPages = decoder.u16();
+  const _stackSize = decoder.u24();
+
+  const _roMem = decoder.bytes(roLength);
+  const _rwMem = decoder.bytes(rwLength);
+
+  const codeLength = decoder.u32();
+  const code = decoder.bytes(codeLength);
+  decoder.finish();
+
+  return decodeProgram(code);
+}
+
+export function liftBytes(data: u8[]): Uint8Array {
+  const p = new Uint8Array(data.length);
+  p.set(data, 0);
+  return p;
+}
+
+export function lowerBytes(data: Uint8Array): u8[] {
+  const r = new Array<u8>(data.length);
+  for (let i = 0; i < data.length; i++) {
+    r[i] = data[i];
+  }
+  return r;
+}
+
+export function decodeProgram(program: Uint8Array): Program {
+  const decoder = new Decoder(program);
 
   // number of items in the jump table
   const jumpTableLength = decoder.varU32();
+
   // how many bytes are used to encode a single item of the jump table
   const jumpTableItemLength = decoder.u8();
   // the length of the code (in bytes).
@@ -36,7 +67,7 @@ export class Mask {
   constructor(packedMask: Uint8Array, codeLength: i32) {
     this.bytesToSkip = new StaticArray<u8>(codeLength);
     let lastInstructionOffset: u8 = 0;
-    for (let i = packedMask.length - 1; i >= 0; i -= 1) {
+    for (let i: i32 = packedMask.length - 1; i >= 0; i -= 1) {
       let bits = packedMask[i];
       const index = i * 8;
       for (let b = 7; b >= 0; b--) {
@@ -95,7 +126,8 @@ export class BasicBlocks {
         isStartOrEnd[i] += BasicBlock.START;
       }
       // in case of start blocks, some of them might be both start & end;
-      if (isInstruction && inBlock && INSTRUCTIONS[code[i]].isTerminating) {
+      const iData = code[i] >= <u8>INSTRUCTIONS.length ? MISSING_INSTRUCTION : INSTRUCTIONS[code[i]];
+      if (isInstruction && inBlock && iData.isTerminating) {
         inBlock = false;
         isStartOrEnd[i] += BasicBlock.END;
       }
@@ -132,7 +164,7 @@ export class JumpTable {
 
     for (let i = 0; i < data.length; i += itemBytes) {
       let num = 0;
-      for (let j = itemBytes - 1; j >= 0; j--) {
+      for (let j: i32 = itemBytes - 1; j >= 0; j--) {
         num = num << 8;
         num += data[i + j];
       }

@@ -1,9 +1,9 @@
 import { RELEVANT_ARGS } from "./arguments";
-import { INSTRUCTIONS } from "./instructions";
+import { INSTRUCTIONS, MISSING_INSTRUCTION } from "./instructions";
 import { Interpreter, Status } from "./interpreter";
 import { Memory, MemoryBuilder } from "./memory";
 import { Access, PAGE_SIZE } from "./memory-page";
-import { Program, decodeArguments, decodeProgram } from "./program";
+import { Program, decodeArguments, decodeProgram, liftBytes } from "./program";
 import { NO_OF_REGISTERS, Registers } from "./registers";
 
 export class InitialPage {
@@ -34,16 +34,24 @@ export class VmOutput {
 }
 
 export function getAssembly(p: Program): string {
-  let v = "";
   const len = p.code.length;
+  if (len === 0) {
+    return "<seems that there is no code>";
+  }
+
+  let v = "";
   for (let i = 0; i < len; i++) {
     if (!p.mask.isInstruction(i)) {
       throw new Error("We should iterate only over instructions!");
     }
+
     const instruction = p.code[i];
-    const iData = INSTRUCTIONS[instruction];
+
+    const iData = instruction >= <u8>INSTRUCTIONS.length ? MISSING_INSTRUCTION : INSTRUCTIONS[instruction];
+
     v += "\n";
     v += changetype<string>(iData.namePtr);
+    v += `(${instruction})`;
 
     const argsLen = p.mask.argsLen(i);
     const end = i + 1 + argsLen;
@@ -65,7 +73,7 @@ export function getAssembly(p: Program): string {
 }
 
 export function runVm(input: VmInput, logs: boolean = false): VmOutput {
-  const p = decodeProgram(input.program);
+  const p = decodeProgram(liftBytes(input.program));
 
   const registers: Registers = new StaticArray(NO_OF_REGISTERS);
   for (let r = 0; r < registers.length; r++) {

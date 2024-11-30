@@ -91,7 +91,7 @@ function main() {
 
   if (args.length === 0) {
     console.error("Error: No JSON files provided.");
-    console.error("Usage: index.js <file1.json> [file2.json ...]");
+    console.error("Usage: index.js [--debug] <file1.json> [file2.json ...]");
     process.exit(1);
   }
 
