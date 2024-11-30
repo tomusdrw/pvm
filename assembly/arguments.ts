@@ -36,6 +36,9 @@ function asArgs(a: u32, b: u32, c: u32, d: u32): Args {
 type ArgsDecoder = (data: Uint8Array) => Args;
 
 function twoImm(data: Uint8Array): Args {
+  if (data.length === 0) {
+    return asArgs(0, 0, 0, 0);
+  }
   const n = nibbles(data[0]);
   const split = n.low + 1;
   const first = decodeI32(data.subarray(1, split));

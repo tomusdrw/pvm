@@ -18,6 +18,8 @@ function instruction(name: string, kind: Arguments, gas: Gas, isTerminating: boo
   return i;
 }
 
+export const MISSING_INSTRUCTION = instruction("INVALID", Arguments.Zero, 1, false);
+
 export const INSTRUCTIONS: Instruction[] = [
   instruction("TRAP", Arguments.Zero, 1, true),
   instruction("LOAD_IND_U32", Arguments.TwoRegOneImm, 1),

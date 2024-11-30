@@ -1,5 +1,5 @@
 import { RELEVANT_ARGS } from "./arguments";
-import { INSTRUCTIONS } from "./instructions";
+import { INSTRUCTIONS, MISSING_INSTRUCTION } from "./instructions";
 import { Interpreter, Status } from "./interpreter";
 import { Memory, MemoryBuilder } from "./memory";
 import { Access, PAGE_SIZE } from "./memory-page";
@@ -40,10 +40,14 @@ export function getAssembly(p: Program): string {
     if (!p.mask.isInstruction(i)) {
       throw new Error("We should iterate only over instructions!");
     }
+
     const instruction = p.code[i];
-    const iData = INSTRUCTIONS[instruction];
+
+    const iData = instruction >= <u8>INSTRUCTIONS.length ? MISSING_INSTRUCTION : INSTRUCTIONS[instruction];
+
     v += "\n";
     v += changetype<string>(iData.namePtr);
+    v += `(${instruction})`;
 
     const argsLen = p.mask.argsLen(i);
     const end = i + 1 + argsLen;

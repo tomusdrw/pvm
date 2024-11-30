@@ -1,6 +1,6 @@
 import { Args, Arguments, DECODERS } from "./arguments";
 import { Decoder } from "./codec";
-import { INSTRUCTIONS } from "./instructions";
+import { INSTRUCTIONS, MISSING_INSTRUCTION } from "./instructions";
 
 export type ProgramCounter = u32;
 
@@ -11,6 +11,7 @@ export function decodeProgram(program: u8[]): Program {
 
   // number of items in the jump table
   const jumpTableLength = decoder.varU32();
+
   // how many bytes are used to encode a single item of the jump table
   const jumpTableItemLength = decoder.u8();
   // the length of the code (in bytes).
@@ -36,7 +37,7 @@ export class Mask {
   constructor(packedMask: Uint8Array, codeLength: i32) {
     this.bytesToSkip = new StaticArray<u8>(codeLength);
     let lastInstructionOffset: u8 = 0;
-    for (let i = packedMask.length - 1; i >= 0; i -= 1) {
+    for (let i: i32 = packedMask.length - 1; i >= 0; i -= 1) {
       let bits = packedMask[i];
       const index = i * 8;
       for (let b = 7; b >= 0; b--) {
@@ -95,7 +96,8 @@ export class BasicBlocks {
         isStartOrEnd[i] += BasicBlock.START;
       }
       // in case of start blocks, some of them might be both start & end;
-      if (isInstruction && inBlock && INSTRUCTIONS[code[i]].isTerminating) {
+      const iData = code[i] >= <u8>INSTRUCTIONS.length ? MISSING_INSTRUCTION : INSTRUCTIONS[code[i]];
+      if (isInstruction && inBlock && iData.isTerminating) {
         inBlock = false;
         isStartOrEnd[i] += BasicBlock.END;
       }
@@ -132,7 +134,7 @@ export class JumpTable {
 
     for (let i = 0; i < data.length; i += itemBytes) {
       let num = 0;
-      for (let j = itemBytes - 1; j >= 0; j--) {
+      for (let j: i32 = itemBytes - 1; j >= 0; j--) {
         num = num << 8;
         num += data[i + j];
       }
