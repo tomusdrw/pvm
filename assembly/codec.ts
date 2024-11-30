@@ -20,9 +20,15 @@ export class Decoder {
     return this.offset >= this.source.length;
   }
 
-  ensureBytes(need: u32): void {
+  private ensureBytes(need: u32): void {
     if (this.offset + need > this.source.length) {
       throw new Error(`Not enough bytes left. Need: ${need}, left: ${this.source.length - this.offset}`);
+    }
+  }
+
+  finish(): void {
+    if (!this.isExhausted()) {
+      throw new Error(`Expecting to use all bytes from the decoder. Left: ${this.source.length - this.offset}`);
     }
   }
 
@@ -37,6 +43,23 @@ export class Decoder {
     this.ensureBytes(1);
     const v = this.source[this.offset];
     this.offset += 1;
+    return v;
+  }
+
+  u16(): u16 {
+    this.ensureBytes(2);
+    let v: u16 = this.source[this.offset];
+    v |= u16(this.source[this.offset + 1]) << 8;
+    this.offset += 2;
+    return v;
+  }
+
+  u24(): u32 {
+    this.ensureBytes(3);
+    let v: u32 = this.source[this.offset];
+    v |= u32(this.source[this.offset + 1]) << 8;
+    v |= u32(this.source[this.offset + 2]) << 16;
+    this.offset += 3;
     return v;
   }
 

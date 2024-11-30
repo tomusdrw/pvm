@@ -3,13 +3,13 @@ import { Decoder } from "./codec";
 import { Gas } from "./gas";
 import { Interpreter, Status } from "./interpreter";
 import { Access, PAGE_SIZE } from "./memory-page";
-import { decodeProgram } from "./program";
+import { decodeProgram, liftBytes } from "./program";
 import { NO_OF_REGISTERS, Registers } from "./registers";
 
 let interpreter: Interpreter | null = null;
 
 export function resetGeneric(program: u8[], flatRegisters: u8[], initialGas: Gas): void {
-  const p = decodeProgram(program);
+  const p = decodeProgram(liftBytes(program));
   const registers: Registers = new StaticArray(NO_OF_REGISTERS);
   fillRegisters(registers, flatRegisters);
   const int = new Interpreter(p, registers);
@@ -24,7 +24,7 @@ export function resetGenericWithMemory(
   chunks: Uint8Array,
   initialGas: Gas,
 ): void {
-  const p = decodeProgram(program);
+  const p = decodeProgram(liftBytes(program));
   const registers: Registers = new StaticArray(NO_OF_REGISTERS);
   fillRegisters(registers, flatRegisters);
 

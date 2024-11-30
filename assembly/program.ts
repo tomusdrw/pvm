@@ -4,10 +4,40 @@ import { INSTRUCTIONS, MISSING_INSTRUCTION } from "./instructions";
 
 export type ProgramCounter = u32;
 
-export function decodeProgram(program: u8[]): Program {
-  const p = new Uint8Array(program.length);
-  p.set(program, 0);
-  const decoder = new Decoder(p);
+export function decodeSpi(data: Uint8Array): Program {
+  const decoder = new Decoder(data);
+
+  const roLength = decoder.u24();
+  const rwLength = decoder.u24();
+  const _heapPages = decoder.u16();
+  const _stackSize = decoder.u24();
+
+  const _roMem = decoder.bytes(roLength);
+  const _rwMem = decoder.bytes(rwLength);
+
+  const codeLength = decoder.u32();
+  const code = decoder.bytes(codeLength);
+  decoder.finish();
+
+  return decodeProgram(code);
+}
+
+export function liftBytes(data: u8[]): Uint8Array {
+  const p = new Uint8Array(data.length);
+  p.set(data, 0);
+  return p;
+}
+
+export function lowerBytes(data: Uint8Array): u8[] {
+  const r = new Array<u8>(data.length);
+  for (let i = 0; i < data.length; i++) {
+    r[i] = data[i];
+  }
+  return r;
+}
+
+export function decodeProgram(program: Uint8Array): Program {
+  const decoder = new Decoder(program);
 
   // number of items in the jump table
   const jumpTableLength = decoder.varU32();

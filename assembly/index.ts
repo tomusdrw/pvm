@@ -1,19 +1,44 @@
 import { VmInput, getAssembly, runVm } from "./api-generic";
-import { decodeProgram } from "./program";
+import { decodeProgram, decodeSpi, liftBytes } from "./program";
 
 export * from "./api";
 export { runVm } from "./api-generic";
 
-export function exampleGetAssembly(program: u8[]): string {
-  const p = decodeProgram(program);
-  return getAssembly(p);
+export enum InputKind {
+  Generic = 0,
+  SPI = 1,
 }
 
-export function exampleRun(program: u8[]): void {
-  const input = new VmInput();
-  input.registers[7] = 9;
-  input.gas = 10_000;
-  input.program = program;
-  const output = runVm(input, true);
-  console.log(`Finished with status: ${output.status}`);
+export function disassemble(input: u8[], kind: InputKind): string {
+  const program = liftBytes(input);
+  if (kind === InputKind.Generic) {
+    const p = decodeProgram(program);
+    return getAssembly(p);
+  }
+
+  if (kind === InputKind.SPI) {
+    const p = decodeSpi(program);
+    return getAssembly(p);
+  }
+
+  return `Unknown kind: ${kind}`;
+}
+
+export function run(input: u8[], kind: InputKind): void {
+  if (kind === InputKind.Generic) {
+    const vmInput = new VmInput();
+    vmInput.registers[7] = 9;
+    vmInput.gas = 10_000;
+    vmInput.program = input;
+
+    const output = runVm(vmInput, true);
+    console.log(`Finished with status: ${output.status}`);
+    return;
+  }
+
+  if (kind === InputKind.SPI) {
+    throw new Error("SPI running not supported yet");
+  }
+
+  throw new Error(`Unknown kind: ${kind}`);
 }
