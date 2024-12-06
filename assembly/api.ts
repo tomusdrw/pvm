@@ -40,7 +40,7 @@ export function nextStep(steps: number = 1): boolean {
   if (interpreter !== null) {
     const int = <Interpreter>interpreter;
     let isOk = true;
-    for (let i=0; i < steps; i++) {
+    for (let i = 0; i < steps; i++) {
       isOk = int.nextStep();
       if (!isOk) {
         return false;
