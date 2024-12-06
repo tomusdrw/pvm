@@ -1,12 +1,12 @@
 import { Access, Arena, PAGE_SIZE, PAGE_SIZE_SHIFT, Page, PageIndex } from "./memory-page";
 
-@unmanaged
+// @unmanaged
 export class MaybePageFault {
   isFault: boolean = false;
   fault: u32 = 0;
 }
 
-@unmanaged
+// @unmanaged
 export class Result {
   ok: u32 = 0;
   fault: MaybePageFault = new MaybePageFault();

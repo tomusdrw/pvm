@@ -16,7 +16,7 @@ export enum Arguments {
 /** How many numbers in `Args` is relevant for given `Arguments`. */
 export const RELEVANT_ARGS = [<u8>0, 1, 2, 1, 2, 3, 3, 2, 3, 3, 4, 3];
 
-@unmanaged
+// @unmanaged
 export class Args {
   a: u32 = 0;
   b: u32 = 0;
@@ -67,8 +67,11 @@ export const DECODERS: ArgsDecoder[] = [
   },
   //DECODERS[Arguments.OneRegTwoImm] =
   (data: Uint8Array) => {
-    const result = twoImm(data.subarray(1));
-    return asArgs(nibbles(data[0]).low, result.a, result.b, result.c);
+    const first = nibbles(data[0]);
+    const split = first.hig + 1;
+    const immA = decodeI32(data.subarray(1, split));
+    const immB = decodeI32(data.subarray(split));
+    return asArgs(first.low, immA, immB, 0);
   },
   // DECODERS[Arguments.OneRegOneImmOneOff] =
   (data: Uint8Array) => {
@@ -104,7 +107,7 @@ export const DECODERS: ArgsDecoder[] = [
   },
 ];
 
-@unmanaged
+// @unmanaged
 class Nibbles {
   low: u8 = 0;
   hig: u8 = 0;
