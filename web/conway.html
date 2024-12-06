@@ -12,6 +12,7 @@ import { resetGenericWithMemory, getPageDump, nextStep } from "./build/release.j
 const $out = document.querySelector('#output');
 const $run = document.querySelector('#run');
 const $stop = document.querySelector('#stop');
+const $step = document.querySelector('#steps');
 
 const steps = {
   count: 0,
@@ -20,10 +21,18 @@ const steps = {
 };
 
 let isRunning = true;
+let lastMemory = null;
+let lastRenderCount = 0;
+let stepsAtOnce = parseInt($step.value);
+
 
 setTimeout(() => {
   pvmInit();
 }, 0);
+
+$step.addEventListener('change', () => {
+  stepsAtOnce = parseInt($step.value);
+});
 
 $run.addEventListener('click', () => {
   $run.classList.add('hidden');
@@ -58,10 +67,28 @@ function pvmInit() {
   refreshCanvas();
 }
 
+function isSame(memA, memB) {
+  if (memA === null || memB === null) {
+    return false;
+  }
+
+  for (let i = 0; i < memA.length; i++) {
+    if (memA[i] !== memB[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function refreshCanvas() {
   const CELLS = 64;
-  const memory = getPageDump(0);
-  const cells = Array.from(memory.slice(0, CELLS)).map(x => (x === 0xff) ? '⬛' :'⬜');
+  const memory = getPageDump(0).subarray(0, CELLS);
+  if (isSame(memory, lastMemory) && (steps.lastTime - steps.startTime < 250)) {
+    return;
+  }
+  lastMemory = memory;
+  lastRenderCount = steps.count;
+  const cells = Array.from(memory).map(x => (x === 0xff) ? '⬛' :'⬜');
   const toPrint = [];
   let i = 0;
   while (i < CELLS) {
@@ -70,7 +97,9 @@ function refreshCanvas() {
     i += 8;
   }
 
-  const perSec = 1000 * steps.count / (steps.lastTime - steps.startTime);
+  const timeMs = steps.lastTime - steps.startTime;
+  let perSec = timeMs === 0 ? 0 : 1000 * steps.count / timeMs;
+  perSec = Number.isNaN(perSec) ? 0.0 : perSec;
   const stats = `Steps: ${steps.count.toString().padStart(10, ' ')} (${perSec.toFixed(1)} steps/sec)`;
   $out.innerHTML = `${toPrint.join('\n')}\n${stats}`;
 }
@@ -79,9 +108,9 @@ function pvmRun() {
   if (!isRunning) {
     return;
   }
-  steps.count += 1;
+  steps.count += stepsAtOnce;
   steps.lastTime = performance.now();
-  isRunning = nextStep();
+  isRunning = nextStep(stepsAtOnce);
   if (!isRunning) {
     $stop.click();
   }
@@ -119,6 +148,9 @@ const CODE = [0,0,128,222,62,1,3,255,0,62,1,11,255,0,62,1,19,255,0,62,1,18,255,0
   </pre>
   <button id="run">▶️ Start</button>
   <button id="stop" class="hidden">▶️ Stop</button>
+  <label>
+    Steps per refresh: <input type="number" min="1" max="1000" id="steps" value="30">
+  </label>
   <a href="https://pvm.fluffylabs.dev">Looking for a better disassembler for PVM?</a>
 </body>
 </html>
