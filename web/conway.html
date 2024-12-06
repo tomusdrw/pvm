@@ -8,7 +8,7 @@
 }
 </style>
 <script type="module" defer>
-import { resetGenericWithMemory, getPageDump, nextStep } from "./build/release.js";
+import { resetGenericWithMemory, getPageDump, run as runSteps } from "./build/release.js";
 const $out = document.querySelector('#output');
 const $run = document.querySelector('#run');
 const $stop = document.querySelector('#stop');
@@ -110,7 +110,7 @@ function pvmRun() {
   }
   steps.count += stepsAtOnce;
   steps.lastTime = performance.now();
-  isRunning = nextStep(stepsAtOnce);
+  isRunning = runSteps(stepsAtOnce);
   if (!isRunning) {
     $stop.click();
   }

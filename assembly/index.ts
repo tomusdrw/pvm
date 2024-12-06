@@ -24,7 +24,7 @@ export function disassemble(input: u8[], kind: InputKind): string {
   return `Unknown kind: ${kind}`;
 }
 
-export function run(input: u8[], kind: InputKind): void {
+export function runProgram(input: u8[], kind: InputKind): void {
   if (kind === InputKind.Generic) {
     const vmInput = new VmInput();
     vmInput.registers[7] = 9;
