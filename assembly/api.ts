@@ -36,11 +36,19 @@ export function resetGenericWithMemory(
   interpreter = int;
 }
 
-export function nextStep(steps: number = 1): boolean {
+export function nextStep(): boolean {
+  if (interpreter !== null) {
+    const int = <Interpreter>interpreter;
+    return int.nextStep();
+  }
+  return false;
+}
+
+export function run(steps: u32): boolean {
   if (interpreter !== null) {
     const int = <Interpreter>interpreter;
     let isOk = true;
-    for (let i = 0; i < steps; i++) {
+    for (let i: u32 = 0; i < steps; i++) {
       isOk = int.nextStep();
       if (!isOk) {
         return false;
@@ -119,6 +127,14 @@ export function getRegisters(): Uint8Array {
   return flat;
 }
 
+export function setRegisters(flatRegisters: u8[]): void {
+  if (interpreter === null) {
+    return;
+  }
+  const int = <Interpreter>interpreter;
+  fillRegisters(int.registers, flatRegisters);
+}
+
 export function getPageDump(index: u32): Uint8Array {
   if (interpreter === null) {
     return new Uint8Array(PAGE_SIZE).fill(0);
@@ -130,6 +146,18 @@ export function getPageDump(index: u32): Uint8Array {
   }
 
   return page;
+}
+
+export function setMemory(address: u32, data: Uint8Array): void {
+  if (interpreter === null) {
+    return;
+  }
+  const int = <Interpreter>interpreter;
+  const end = address + data.length;
+  for (let i = address; i < end; i++) {
+    // TODO [ToDr] handle page fault?
+    int.memory.setU8(i, data[i]);
+  }
 }
 
 function fillRegisters(registers: Registers, flat: u8[]): void {

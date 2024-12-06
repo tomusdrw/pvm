@@ -3,7 +3,7 @@
 <head>
 <link type="text/css" rel="stylesheet" href="./styles.css" />
 <script type="module" defer>
-import { disassemble, run, InputKind } from "./build/release.js";
+import { disassemble, runProgram, InputKind } from "./build/release.js";
 const $upload = document.querySelector('#upload');
 const $code = document.querySelector('#code');
 const $file = document.querySelector('#file');
@@ -89,7 +89,7 @@ function execute(shouldRun = false) {
   }
 
   try {
-    run(program, kind);
+    runProgram(program, kind);
     $out.innerHTML += `\n\n Run OK!`;
   } catch (e) {
     console.error(e);
