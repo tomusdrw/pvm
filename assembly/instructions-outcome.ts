@@ -13,7 +13,7 @@ export enum Outcome {
   Result = 3,
 }
 
-@unmanaged
+// @unmanaged
 export class OutcomeData {
   outcome: Outcome = Outcome.Ok;
   staticJump: i32 = 0;

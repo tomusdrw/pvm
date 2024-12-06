@@ -141,7 +141,7 @@ export class Interpreter {
   }
 }
 
-@unmanaged
+// @unmanaged
 class BranchResult {
   isOkay: boolean = false;
   newPc: u32 = 0;
@@ -163,7 +163,7 @@ enum DjumpStatus {
   PANIC = 2,
 }
 
-@unmanaged
+// @unmanaged
 class DjumpResult {
   status: DjumpStatus = DjumpStatus.OK;
   newPc: u32 = 0;

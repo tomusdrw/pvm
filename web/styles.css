@@ -1,0 +1,51 @@
+#root, html {
+  font-size: 18px;
+  font-family: monospace;
+}
+* {
+  font-size: 1rem;
+}
+h1 {
+  font-size: 2rem;
+}
+h3 {
+  font-size: 1.4rem;
+  text-align: right;
+}
+body {
+  width: 70vw;
+  max-width: 1024px;
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+#file {
+  display: none;
+}
+button {
+  padding: 1rem;
+  cursor: pointer;
+}
+textarea {
+  padding: 1rem;
+}
+textarea.error {
+  border: 2px solid #e22;
+}
+pre {
+  border: 1px solid #ccc;
+  background: #ddd;
+  padding: 1rem;
+}
+#run {
+  background-color: #5c7;
+}
+.actions {
+  display: flex;
+  gap: 1rem;
+  flex-direction: row;
+}
+.actions > * {
+  flex: 1;
+}

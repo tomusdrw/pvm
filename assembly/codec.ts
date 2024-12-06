@@ -81,7 +81,7 @@ export class Decoder {
   }
 }
 
-@unmanaged
+// @unmanaged
 export class ValOffset<T> {
   constructor(
     public readonly value: T,

@@ -1,59 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>
-#root, html {
-  font-size: 18px;
-  font-family: monospace;
-}
-* {
-  font-size: 1rem;
-}
-h1 {
-  font-size: 2rem;
-}
-h3 {
-  font-size: 1.4rem;
-  text-align: right;
-}
-body {
-  width: 70vw;
-  max-width: 1024px;
-  margin: 2rem auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-#file {
-  display: none;
-}
-button {
-  padding: 1rem;
-  cursor: pointer;
-}
-textarea {
-  padding: 1rem;
-}
-textarea.error {
-  border: 2px solid #e22;
-}
-pre {
-  border: 1px solid #ccc;
-  background: #ddd;
-  padding: 1rem;
-}
-#run {
-  background-color: #5c7;
-}
-.actions {
-  display: flex;
-  gap: 1rem;
-  flex-direction: row;
-}
-.actions > * {
-  flex: 1;
-}
-</style>
+<link type="text/css" rel="stylesheet" href="./styles.css" />
 <script type="module" defer>
 import { disassemble, run, InputKind } from "./build/release.js";
 const $upload = document.querySelector('#upload');
@@ -158,6 +106,9 @@ function execute(shouldRun = false) {
     <a href="./build/release.wasm">release.wasm</a>|<a href="./build/release.wat">wat</a>
     or
     <a href="./build/debug.wasm">debug.wasm</a>|<a href="./build/debug.wat">wat</a>
+  </p>
+  <p>
+    <a href="conway.html">Game of Life</a>
   </p>
   <label>
     <input type="checkbox" id="spi"> JAM SPI

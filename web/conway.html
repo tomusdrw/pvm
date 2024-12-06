@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link type="text/css" rel="stylesheet" href="./styles.css" />
+<style>
+.hidden {
+  display: none;
+}
+</style>
+<script type="module" defer>
+import { resetGenericWithMemory, getPageDump, nextStep } from "./build/release.js";
+const $out = document.querySelector('#output');
+const $run = document.querySelector('#run');
+const $stop = document.querySelector('#stop');
+const $step = document.querySelector('#steps');
+
+const steps = {
+  count: 0,
+  startTime: null,
+  lastTime: null,
+};
+
+let isRunning = true;
+let lastMemory = null;
+let lastRenderCount = 0;
+let stepsAtOnce = parseInt($step.value);
+
+
+setTimeout(() => {
+  pvmInit();
+}, 0);
+
+$step.addEventListener('change', () => {
+  stepsAtOnce = parseInt($step.value);
+});
+
+$run.addEventListener('click', () => {
+  $run.classList.add('hidden');
+  $stop.classList.remove('hidden');
+
+  isRunning = true;
+  steps.count = 0;
+  steps.startTime = performance.now();
+
+  pvmRun();
+});
+
+$stop.addEventListener('click', () => {
+  $stop.classList.add('hidden');
+  $run.classList.remove('hidden');
+  pvmStop();
+});
+
+function pvmInit() {
+  const registers = Array(13 * 4).fill(0);
+  const pageMap = new Uint8Array(
+    [...u32_le_bytes(0), ...u32_le_bytes(4096), 1]
+  );
+  const chunks = new Uint8Array();
+  resetGenericWithMemory(
+    CODE,
+    registers,
+    pageMap,
+    chunks,
+    10_000_000n
+  );
+  refreshCanvas();
+}
+
+function isSame(memA, memB) {
+  if (memA === null || memB === null) {
+    return false;
+  }
+
+  for (let i = 0; i < memA.length; i++) {
+    if (memA[i] !== memB[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function refreshCanvas() {
+  const CELLS = 64;
+  const memory = getPageDump(0).subarray(0, CELLS);
+  if (isSame(memory, lastMemory) && (steps.lastTime - steps.startTime < 250)) {
+    return;
+  }
+  lastMemory = memory;
+  lastRenderCount = steps.count;
+  const cells = Array.from(memory).map(x => (x === 0xff) ? '⬛' :'⬜');
+  const toPrint = [];
+  let i = 0;
+  while (i < CELLS) {
+    const row = cells.slice(i, i + 8);
+    toPrint.push(row.join(' '));
+    i += 8;
+  }
+
+  const timeMs = steps.lastTime - steps.startTime;
+  let perSec = timeMs === 0 ? 0 : 1000 * steps.count / timeMs;
+  perSec = Number.isNaN(perSec) ? 0.0 : perSec;
+  const stats = `Steps: ${steps.count.toString().padStart(10, ' ')} (${perSec.toFixed(1)} steps/sec)`;
+  $out.innerHTML = `${toPrint.join('\n')}\n${stats}`;
+}
+
+function pvmRun() {
+  if (!isRunning) {
+    return;
+  }
+  steps.count += stepsAtOnce;
+  steps.lastTime = performance.now();
+  isRunning = nextStep(stepsAtOnce);
+  if (!isRunning) {
+    $stop.click();
+  }
+  refreshCanvas();
+  setTimeout(pvmRun, 0);
+}
+function pvmStop() {
+  isRunning = false;
+}
+
+function u32_le_bytes(val) {
+  const out = new Uint8Array(4);
+  out[0] = val & 0xff;
+  out[1] = (val >> 8) & 0xff;
+  out[2] = (val >> 16) & 0xff;
+  out[3] = (val >> 24) & 0xff;
+  return out;
+}
+    
+const CODE = [0,0,128,222,62,1,3,255,0,62,1,11,255,0,62,1,19,255,0,62,1,18,255,0,62,1,9,255,0,5,176,0,4,1,255,17,2,17,1,7,17,8,166,0,4,2,255,17,2,34,1,7,18,8,241,35,19,8,8,35,3,5,47,2,51,128,0,11,52,18,68,1,15,20,1,14,44,21,2,25,50,21,3,21,5,8,7,21,3,6,5,11,2,51,128,26,3,255,0,5,205,2,51,128,26,3,5,198,4,5,2,52,128,0,2,68,255,11,70,18,102,1,8,101,5,2,68,2,11,70,18,102,1,8,101,5,2,68,247,11,70,18,102,1,8,101,5,2,68,16,11,70,18,102,1,8,101,5,2,68,1,11,70,18,102,1,8,101,5,2,68,254,11,70,18,102,1,8,101,5,2,68,240,11,70,18,102,1,8,101,5,2,68,2,11,70,18,102,1,8,101,5,5,117,255,4,1,17,2,19,128,0,1,18,3,50,2,17,4,7,17,64,69,255,5,240,33,132,16,146,9,153,72,138,18,17,69,137,82,69,74,82,146,146,148,164,36,37,41,73,73,26,149,16];
+</script>
+</head>
+<body>
+  <h3>Check out <a href="https://fluffylabs.dev">other fluffy stuff.</a></h3>
+  <h1>🍍 Anan-AS - Game Of Life</h1>
+  <p>Download:
+    <a href="./build/release.wasm">release.wasm</a>|<a href="./build/release.wat">wat</a>
+    or
+    <a href="./build/debug.wasm">debug.wasm</a>|<a href="./build/debug.wat">wat</a>
+  </p>
+  <p>
+    <a href="index.html">Home</a>
+  </p>
+  <pre id="output">
+  </pre>
+  <button id="run">▶️ Start</button>
+  <button id="stop" class="hidden">▶️ Stop</button>
+  <label>
+    Steps per refresh: <input type="number" min="1" max="1000" id="steps" value="30">
+  </label>
+  <a href="https://pvm.fluffylabs.dev">Looking for a better disassembler for PVM?</a>
+</body>
+</html>
