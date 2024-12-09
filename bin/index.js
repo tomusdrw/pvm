@@ -22,19 +22,19 @@ function processJson(data, debug = false) {
   }
   // input
   const input = {
-    registers: read(data, 'initial-regs'),
-    pc: read(data, 'initial-pc' ),
-    pageMap: asPageMap(read(data, 'initial-page-map' )),
-    memory: asChunks(read(data, 'initial-memory' )),
-    gas: BigInt(read(data, 'initial-gas' )),
+    registers: read(data, 'initial-regs').map(x => BigInt(x)),
+    pc: read(data, 'initial-pc'),
+    pageMap: asPageMap(read(data, 'initial-page-map')),
+    memory: asChunks(read(data, 'initial-memory')),
+    gas: BigInt(read(data, 'initial-gas')),
     program: read(data, 'program'),
   };
   // expected
   const expected = {
-    status: read(data, 'expected-status' ),
-    registers: read(data, 'expected-regs' ),
-    pc: read(data,  'expected-pc' ),
-    memory: asChunks(read(data, 'expected-memory' )),
+    status: read(data, 'expected-status'),
+    registers: read(data, 'expected-regs').map(x => BigInt(x)),
+    pc: read(data,  'expected-pc'),
+    memory: asChunks(read(data, 'expected-memory')),
     gas: BigInt(read(data, 'expected-gas')),
   };
 

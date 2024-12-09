@@ -17,7 +17,7 @@ export class InitialChunk {
 }
 
 export class VmInput {
-  registers: u32[] = new Array<u32>(NO_OF_REGISTERS).fill(0);
+  registers: u64[] = new Array<u64>(NO_OF_REGISTERS).fill(0);
   pc: u32 = 0;
   gas: i64 = 0;
   program: u8[] = [];
@@ -27,7 +27,7 @@ export class VmInput {
 
 export class VmOutput {
   status: Status = Status.OK;
-  registers: u32[] = [];
+  registers: u64[] = [];
   pc: u32 = 0;
   memory: InitialChunk[] = [];
   gas: i64 = 0;

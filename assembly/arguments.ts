@@ -1,16 +1,19 @@
+import {REG_SIZE_BYTES} from "./registers";
+
 export enum Arguments {
   Zero = 0,
   OneImm = 1,
   TwoImm = 2,
   OneOff = 3,
   OneRegOneImm = 4,
-  OneRegTwoImm = 5,
-  OneRegOneImmOneOff = 6,
-  TwoReg = 7,
-  TwoRegOneImm = 8,
-  TwoRegOneOff = 9,
-  TwoRegTwoImm = 10,
-  ThreeReg = 11,
+  OneRegOneExtImm = 5,
+  OneRegTwoImm = 6,
+  OneRegOneImmOneOff = 7,
+  TwoReg = 8,
+  TwoRegOneImm = 9,
+  TwoRegOneOff = 10,
+  TwoRegTwoImm = 11,
+  ThreeReg = 12,
 }
 
 /** How many numbers in `Args` is relevant for given `Arguments`. */
@@ -64,6 +67,13 @@ export const DECODERS: ArgsDecoder[] = [
   // DECODERS[Arguments.OneRegOneImm] =
   (data: Uint8Array) => {
     return asArgs(nibbles(data[0]).low, decodeI32(data.subarray(1)), 0, 0);
+  },
+  // DECODERS[Arguments.OneRegOneExtImm] =
+  (data: Uint8Array) => {
+    const v = decodeI64(data);
+    const a = u32(v);
+    const b = u32(v >> 32);
+    return asArgs(a, b, 0, 0);
   },
   //DECODERS[Arguments.OneRegTwoImm] =
   (data: Uint8Array) => {
@@ -134,6 +144,21 @@ function decodeI32(data: Uint8Array): u32 {
   const msb = len > 0 ? data[len - 1] & 0x80 : 0;
   const prefix = msb > 0 ? 0xff : 0x00;
   for (let i: u32 = len; i < 4; i++) {
+    num |= prefix << (i * 8);
+  }
+  return num;
+}
+
+function decodeI64(data: Uint8Array): u64 {
+  const len = <u32>data.length;
+  let num: u64 = 0;
+  for (let i: u32 = 0; i < len; i++) {
+    num |= u64(data[i]) << (i * 8);
+  }
+
+  const msb = len > 0 ? data[len - 1] & 0x80 : 0;
+  const prefix = msb > 0 ? 0xff : 0x00;
+  for (let i: u32 = len; i < <u32>REG_SIZE_BYTES; i++) {
     num |= prefix << (i * 8);
   }
   return num;
