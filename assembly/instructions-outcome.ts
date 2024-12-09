@@ -48,7 +48,7 @@ export function ok(): OutcomeData {
 }
 
 export function panic(): OutcomeData {
-  return status(Result.PANIC)
+  return status(Result.PANIC);
 }
 
 export function hostCall(id: u32): OutcomeData {

@@ -46,7 +46,7 @@ export const INSTRUCTIONS: Instruction[] = [
   MISSING_INSTRUCTION,
 
   // 20
-  instruction("LOAD_IMM_64", Arguments.OneRegOneImmOneOff, 1), // NEW
+  instruction("LOAD_IMM_64", Arguments.OneRegOneImmOneOff, 1),
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
@@ -56,12 +56,12 @@ export const INSTRUCTIONS: Instruction[] = [
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
- 
+
   // 30
   instruction("STORE_IMM_U8", Arguments.TwoImm, 1),
   instruction("STORE_IMM_U16", Arguments.TwoImm, 1),
   instruction("STORE_IMM_U32", Arguments.TwoImm, 1),
-  instruction("STORE_IMM_U64", Arguments.TwoImm, 1), // NEW
+  instruction("STORE_IMM_U64", Arguments.TwoImm, 1),
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
@@ -89,14 +89,14 @@ export const INSTRUCTIONS: Instruction[] = [
   instruction("LOAD_U16", Arguments.OneRegOneImm, 1),
   instruction("LOAD_I16", Arguments.OneRegOneImm, 1),
   instruction("LOAD_U32", Arguments.OneRegOneImm, 1),
-  instruction("LOAD_I32", Arguments.OneRegOneImm, 1), // NEW
-  instruction("LOAD_U64", Arguments.OneRegOneImm, 1), // NEW
+  instruction("LOAD_I32", Arguments.OneRegOneImm, 1),
+  instruction("LOAD_U64", Arguments.OneRegOneImm, 1),
   instruction("STORE_U8", Arguments.OneRegOneImm, 1),
 
   // 60
   instruction("STORE_U16", Arguments.OneRegOneImm, 1),
   instruction("STORE_U32", Arguments.OneRegOneImm, 1),
-  instruction("STORE_U64", Arguments.OneRegOneImm, 1), // NEW
+  instruction("STORE_U64", Arguments.OneRegOneImm, 1),
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
@@ -104,12 +104,12 @@ export const INSTRUCTIONS: Instruction[] = [
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
-  
+
   // 70
   instruction("STORE_IMM_IND_U8", Arguments.OneRegTwoImm, 1),
   instruction("STORE_IMM_IND_U16", Arguments.OneRegTwoImm, 1),
   instruction("STORE_IMM_IND_U32", Arguments.OneRegTwoImm, 1),
-  instruction("STORE_IMM_IND_U64", Arguments.OneRegTwoImm, 1), // NEW
+  instruction("STORE_IMM_IND_U64", Arguments.OneRegTwoImm, 1),
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
   MISSING_INSTRUCTION,
@@ -157,34 +157,34 @@ export const INSTRUCTIONS: Instruction[] = [
   instruction("STORE_IND_U8", Arguments.TwoRegOneImm, 1),
   instruction("STORE_IND_U16", Arguments.TwoRegOneImm, 1),
   instruction("STORE_IND_U32", Arguments.TwoRegOneImm, 1),
-  instruction("STORE_IND_U64", Arguments.TwoRegOneImm, 1), // NEW
+  instruction("STORE_IND_U64", Arguments.TwoRegOneImm, 1),
   instruction("LOAD_IND_U8", Arguments.TwoRegOneImm, 1),
   instruction("LOAD_IND_I8", Arguments.TwoRegOneImm, 1),
   instruction("LOAD_IND_U16", Arguments.TwoRegOneImm, 1),
   instruction("LOAD_IND_I16", Arguments.TwoRegOneImm, 1),
   instruction("LOAD_IND_U32", Arguments.TwoRegOneImm, 1),
-  instruction("LOAD_IND_I32", Arguments.TwoRegOneImm, 1), // NEW
+  instruction("LOAD_IND_I32", Arguments.TwoRegOneImm, 1),
 
   // 120
-  instruction("LOAD_IND_U64", Arguments.TwoRegOneImm, 1), // NEW
-  instruction("ADD_IMM_32", Arguments.TwoRegOneImm, 1), // NEW
+  instruction("LOAD_IND_U64", Arguments.TwoRegOneImm, 1),
+  instruction("ADD_IMM_32", Arguments.TwoRegOneImm, 1),
   instruction("AND_IMM", Arguments.TwoRegOneImm, 1),
   instruction("XOR_IMM", Arguments.TwoRegOneImm, 1),
   instruction("OR_IMM", Arguments.TwoRegOneImm, 1),
-  instruction("MUL_IMM_32", Arguments.TwoRegOneImm, 1), // NEW
+  instruction("MUL_IMM_32", Arguments.TwoRegOneImm, 1),
   instruction("SET_LT_U_IMM", Arguments.TwoRegOneImm, 1),
   instruction("SET_LT_S_IMM", Arguments.TwoRegOneImm, 1),
-  instruction("SHLO_L_IMM_32", Arguments.TwoRegOneImm, 1), // NEW
-  instruction("SHLO_R_IMM_32", Arguments.TwoRegOneImm, 1), // NEW
+  instruction("SHLO_L_IMM_32", Arguments.TwoRegOneImm, 1),
+  instruction("SHLO_R_IMM_32", Arguments.TwoRegOneImm, 1),
 
   // 130
-  instruction("SHAR_R_IMM_32", Arguments.TwoRegOneImm, 1), // NEW
-  instruction("NEG_ADD_IMM_32", Arguments.TwoRegOneImm, 1), // NEW
+  instruction("SHAR_R_IMM_32", Arguments.TwoRegOneImm, 1),
+  instruction("NEG_ADD_IMM_32", Arguments.TwoRegOneImm, 1),
   instruction("SET_GT_U_IMM", Arguments.TwoRegOneImm, 1),
   instruction("SET_GT_S_IMM", Arguments.TwoRegOneImm, 1),
-  instruction("SHLO_L_IMM_ALT_32", Arguments.TwoRegOneImm, 1), // NEW
-  instruction("SHLO_R_IMM_ALT_32", Arguments.TwoRegOneImm, 1), // NEW
-  instruction("SHAR_R_IMM_ALT_32", Arguments.TwoRegOneImm, 1), // NEW
+  instruction("SHLO_L_IMM_ALT_32", Arguments.TwoRegOneImm, 1),
+  instruction("SHLO_R_IMM_ALT_32", Arguments.TwoRegOneImm, 1),
+  instruction("SHAR_R_IMM_ALT_32", Arguments.TwoRegOneImm, 1),
   instruction("CMOV_IZ_IMM", Arguments.TwoRegOneImm, 1),
   instruction("CMOV_NZ_IMM", Arguments.TwoRegOneImm, 1),
   instruction("ADD_IMM", Arguments.TwoRegOneImm, 1),
@@ -226,16 +226,16 @@ export const INSTRUCTIONS: Instruction[] = [
   MISSING_INSTRUCTION,
 
   // 170
-  instruction("ADD_32", Arguments.ThreeReg, 1), // NEW
-  instruction("SUB_32", Arguments.ThreeReg, 1), // NEW
-  instruction("MUL_32", Arguments.ThreeReg, 1), // NEW
-  instruction("DIV_U_32", Arguments.ThreeReg, 1), // NEW
-  instruction("DIV_S_32", Arguments.ThreeReg, 1), // NEW
-  instruction("REM_U_32", Arguments.ThreeReg, 1), // NEW
-  instruction("REM_S_32", Arguments.ThreeReg, 1), // NEW
-  instruction("SHLO_L_32", Arguments.ThreeReg, 1), // NEW
-  instruction("SHLO_R_32", Arguments.ThreeReg, 1), // NEW
-  instruction("SHAR_R_32", Arguments.ThreeReg, 1), // NEW
+  instruction("ADD_32", Arguments.ThreeReg, 1),
+  instruction("SUB_32", Arguments.ThreeReg, 1),
+  instruction("MUL_32", Arguments.ThreeReg, 1),
+  instruction("DIV_U_32", Arguments.ThreeReg, 1),
+  instruction("DIV_S_32", Arguments.ThreeReg, 1),
+  instruction("REM_U_32", Arguments.ThreeReg, 1),
+  instruction("REM_S_32", Arguments.ThreeReg, 1),
+  instruction("SHLO_L_32", Arguments.ThreeReg, 1),
+  instruction("SHLO_R_32", Arguments.ThreeReg, 1),
+  instruction("SHAR_R_32", Arguments.ThreeReg, 1),
 
   // 180
   instruction("ADD", Arguments.ThreeReg, 1),

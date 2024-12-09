@@ -1,5 +1,3 @@
-import {REG_SIZE_BYTES} from "./registers";
-
 export enum Arguments {
   Zero = 0,
   OneImm = 1,
@@ -72,9 +70,10 @@ export const DECODERS: ArgsDecoder[] = [
   },
   // DECODERS[Arguments.OneRegOneExtImm] =
   (data: Uint8Array) => {
-    const a = decodeU32(data);
-    const b = decodeU32(data.subarray(4));
-    return asArgs(a, b, 0, 0);
+    const a = nibbles(data[0]).low;
+    const b = decodeU32(data.subarray(1));
+    const c = decodeU32(data.subarray(5));
+    return asArgs(a, b, c, 0);
   },
   //DECODERS[Arguments.OneRegTwoImm] =
   (data: Uint8Array) => {

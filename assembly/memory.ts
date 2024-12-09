@@ -8,7 +8,7 @@ export class MaybePageFault {
 
 // @unmanaged
 export class Result {
-  ok: u32 = 0;
+  ok: u64 = 0;
   fault: MaybePageFault = new MaybePageFault();
 }
 
@@ -125,6 +125,23 @@ export class Memory {
     return r;
   }
 
+  getU64(address: u32): Result {
+    const res = this.getBytes(Access.Read, address, 8);
+    const r = new Result();
+    r.fault = res.fault;
+    if (!res.fault.isFault) {
+      r.ok = res.bytes[0];
+      r.ok |= (<u64>res.bytes[1]) << 8;
+      r.ok |= (<u64>res.bytes[2]) << 16;
+      r.ok |= (<u64>res.bytes[3]) << 24;
+      r.ok |= u64(res.bytes[4]) << 32;
+      r.ok |= u64(res.bytes[5]) << 40;
+      r.ok |= u64(res.bytes[6]) << 48;
+      r.ok |= u64(res.bytes[7]) << 56;
+    }
+    return r;
+  }
+
   getI8(address: u32): Result {
     const res = this.getBytes(Access.Read, address, 1);
     const r = new Result();
@@ -141,10 +158,31 @@ export class Memory {
     r.fault = res.fault;
     if (!res.fault.isFault) {
       const l = u32(res.bytes[0]);
-      const h = u32(res.bytes[1]) << 8;
-      r.ok = l | h;
+      r.ok = l;
+      r.ok |= u32(res.bytes[1]) << 8;
+
       if ((l & 0x80) > 0) {
-        r.ok |= 0xffff_0000;
+        const high = i64(2 ** 64 - 1) & 0x0000;
+        r.ok |= high;
+      }
+    }
+    return r;
+  }
+
+  getI32(address: u32): Result {
+    const res = this.getBytes(Access.Read, address, 4);
+    const r = new Result();
+    r.fault = res.fault;
+    if (!res.fault.isFault) {
+      const l = u32(res.bytes[0]);
+      r.ok = l;
+      r.ok |= u32(res.bytes[1]) << 8;
+      r.ok |= u32(res.bytes[2]) << 16;
+      r.ok |= u32(res.bytes[3]) << 24;
+
+      if ((l & 0x80) > 0) {
+        const high = i64(2 ** 64 - 1) & 0x0000_0000;
+        r.ok |= high;
       }
     }
     return r;
@@ -189,6 +227,28 @@ export class Memory {
 
     for (let i = 0; i < res.second.length; i++) {
       res.second[i] = v & 0xff;
+      v = v >> 8;
+    }
+
+    return res.fault;
+  }
+
+  setU64(address: u32, value: u64): MaybePageFault {
+    const res = this.getChunks(Access.Write, address, 8);
+    if (res.fault.isFault) {
+      return res.fault;
+    }
+
+    let v = value;
+    const len = res.first.length;
+
+    for (let i = 0; i < len; i++) {
+      res.first[i] = u8(v);
+      v = v >> 8;
+    }
+
+    for (let i = 0; i < res.second.length; i++) {
+      res.second[i] = u8(v);
       v = v >> 8;
     }
 
