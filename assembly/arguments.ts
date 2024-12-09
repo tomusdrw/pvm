@@ -49,6 +49,8 @@ function twoImm(data: Uint8Array): Args {
   return asArgs(first, second, 0, 0);
 }
 
+// TODO [ToDr] Validate enough bytes.
+
 export const DECODERS: ArgsDecoder[] = [
   // DECODERS[Arguments.Zero] =
   (_) => {
@@ -70,9 +72,8 @@ export const DECODERS: ArgsDecoder[] = [
   },
   // DECODERS[Arguments.OneRegOneExtImm] =
   (data: Uint8Array) => {
-    const v = decodeI64(data);
-    const a = u32(v);
-    const b = u32(v >> 32);
+    const a = decodeU32(data);
+    const b = decodeU32(data.subarray(4));
     return asArgs(a, b, 0, 0);
   },
   //DECODERS[Arguments.OneRegTwoImm] =
@@ -149,17 +150,10 @@ function decodeI32(data: Uint8Array): u32 {
   return num;
 }
 
-function decodeI64(data: Uint8Array): u64 {
-  const len = <u32>data.length;
-  let num: u64 = 0;
-  for (let i: u32 = 0; i < len; i++) {
-    num |= u64(data[i]) << (i * 8);
-  }
-
-  const msb = len > 0 ? data[len - 1] & 0x80 : 0;
-  const prefix = msb > 0 ? 0xff : 0x00;
-  for (let i: u32 = len; i < <u32>REG_SIZE_BYTES; i++) {
-    num |= prefix << (i * 8);
-  }
+function decodeU32(data: Uint8Array): u32 {
+  let num = u32(data[0]);
+  num |= u32(data[1]) << 8;
+  num |= u32(data[2]) << 16;
+  num |= u32(data[3]) << 24;
   return num;
 }
