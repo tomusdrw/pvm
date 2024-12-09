@@ -203,6 +203,7 @@ export const RUN: InstructionRun[] = [
   (args, registers, memory) => {
     const address = u32(registers[args.a] + args.b);
     const pageFault = memory.setU8(address, <u8>(args.c & 0xff));
+    console.log(`Wrote into ${address}`);
     return okOrFault(pageFault);
   },
   // STORE_IMM_IND_U16
@@ -655,6 +656,87 @@ export const RUN: InstructionRun[] = [
   INVALID,
 
   // 170
+  // ADD_32
+  (args, registers) => {
+    registers[args.c] = i64(u32(registers[args.a] + registers[args.b]));
+    return ok();
+  },
+  // SUB_32
+  (args, registers) => {
+    registers[args.c] = i64(
+      u32(
+        registers[args.b] + 2**32 - u32(registers[args.a])
+      )
+    );
+    return ok();
+  },
+  // MUL_32
+  (args, registers) => {
+    registers[args.c] = i64(u32(registers[args.a] * registers[args.b]));
+    return ok();
+  },
+  // DIV_U_32
+  (args, registers) => {
+    if (u32(registers[args.a]) === 0) {
+      registers[args.c] = i64.MAX_VALUE;
+    } else {
+      registers[args.c] = u32(registers[args.b]) / u32(registers[args.a]);
+    }
+    return ok();
+  },
+  // DIV_S_32
+  (args, registers) => {
+    const b = i64(registers[args.b]);
+    const a = i64(registers[args.a]);
+    if (a === 0) {
+      registers[args.c] = i64.MAX_VALUE;
+    } else if (a === -1 && b === i32.MIN_VALUE) {
+      registers[args.c] = b;
+    } else {
+      registers[args.c] = i64(u32(b)) / i64(u32(a));
+    }
+    return ok();
+  },
+  // REM_U_32
+  (args, registers) => {
+    if (u32(registers[args.a]) === 0) {
+      registers[args.c] = i64(u32(registers[args.b]));
+    } else {
+      registers[args.c] = i64(u32(registers[args.b]) % u32(registers[args.a]));
+    }
+    return ok();
+  },
+  // REM_S_32
+  (args, registers) => {
+    const b = i32(registers[args.b]);
+    const a = i32(registers[args.a]);
+    if (a === 0) {
+      registers[args.c] = i64(b);
+    } else if (a === -1 && b === i32.MIN_VALUE) {
+      registers[args.c] = 0;
+    } else {
+      registers[args.c] = i64(b) % i64(a);
+    }
+    return ok();
+  },
+  // SHLO_L_32
+  (args, registers) => {
+    const shift = u32(registers[args.a] % MAX_SHIFT_32);
+    registers[args.c] = i64(u32(registers[args.b]) << shift);
+    return ok();
+  },
+  // SHLO_R_32
+  (args, registers) => {
+    const shift = u32(registers[args.a] % MAX_SHIFT_32);
+    registers[args.c] = i64(u32(registers[args.b]) >>> shift);
+    return ok();
+  },
+  // SHAR_R_32
+  (args, registers) => {
+    const shift = u32(registers[args.a] % MAX_SHIFT_32);
+    registers[args.c] = i64(u32(registers[args.b])) >> shift;
+    return ok();
+  },
 
   // 180
   // ADD
@@ -686,7 +768,7 @@ export const RUN: InstructionRun[] = [
     const b = i64(registers[args.b]);
     const a = i64(registers[args.a]);
     if (a === 0) {
-      registers[args.c] = 2 ** 64 - 1;
+      registers[args.c] = i64.MAX_VALUE;
     } else if (a === -1 && b === i64.MIN_VALUE) {
       registers[args.c] = b;
     } else {
@@ -705,10 +787,14 @@ export const RUN: InstructionRun[] = [
   },
   // REM_S
   (args, registers) => {
-    if (registers[args.a] === 0) {
-      registers[args.c] = registers[args.b];
+    const b = i64(registers[args.b]);
+    const a = i64(registers[args.a]);
+    if (a === 0) {
+      registers[args.c] = b;
+    } else if (a === -1 && b === i64.MIN_VALUE) {
+      registers[args.c] = 0;
     } else {
-      registers[args.c] = <i64>registers[args.b] % <i64>registers[args.a];
+      registers[args.c] = b % a;
     }
     return ok();
   },

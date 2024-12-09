@@ -15,7 +15,7 @@ export enum Arguments {
 }
 
 /** How many numbers in `Args` is relevant for given `Arguments`. */
-export const RELEVANT_ARGS = [<u8>0, 1, 2, 1, 2, 3, 3, 2, 3, 3, 4, 3];
+export const RELEVANT_ARGS = [<u8>0, 1, 2, 1, 2, 3, 3, 3, 2, 3, 3, 4, 3];
 
 // @unmanaged
 export class Args {

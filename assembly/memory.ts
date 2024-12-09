@@ -162,7 +162,7 @@ export class Memory {
       r.ok |= u32(res.bytes[1]) << 8;
 
       if ((l & 0x80) > 0) {
-        const high = i64(2 ** 64 - 1) & 0x0000;
+        const high = i64(2 ** 64 - 1) << 16;
         r.ok |= high;
       }
     }
@@ -181,7 +181,7 @@ export class Memory {
       r.ok |= u32(res.bytes[3]) << 24;
 
       if ((l & 0x80) > 0) {
-        const high = i64(2 ** 64 - 1) & 0x0000_0000;
+        const high = i64(2 ** 64 - 1) << 32;
         r.ok |= high;
       }
     }
@@ -267,15 +267,20 @@ export class Memory {
       return fault(address);
     }
 
-    const secondPageIdx = ((address + u32(bytes)) % MEMORY_SIZE) >> PAGE_SIZE_SHIFT;
     const relativeAddress = address % PAGE_SIZE;
+    const endAddress = relativeAddress + u32(bytes);
+    const needSecondPage = endAddress > PAGE_SIZE;
 
     // everything is on one page - easy case
-    if (secondPageIdx === pageIdx) {
-      const first = page.raw.data.subarray(relativeAddress, relativeAddress + <u32>bytes);
+    if (!needSecondPage) {
+      const first = page.raw.data.subarray(relativeAddress, endAddress);
       return new Chunks(new MaybePageFault(), first);
     }
 
+    const secondPageIdx = ((address + u32(bytes)) % MEMORY_SIZE) >> PAGE_SIZE_SHIFT;
+    if (!this.pages.has(secondPageIdx)) {
+      return fault(address);
+    }
     // fetch the second page and check access
     const secondPage = this.pages.get(secondPageIdx);
     if (!page.can(access)) {
