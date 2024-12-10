@@ -15,7 +15,9 @@ export enum Arguments {
 }
 
 /** How many numbers in `Args` is relevant for given `Arguments`. */
-export const RELEVANT_ARGS = [<u8>0, 1, 2, 1, 2, 3, 3, 3, 2, 3, 3, 4, 3];
+export const RELEVANT_ARGS = [<i32>0, 1, 2, 1, 2, 3, 3, 3, 2, 3, 3, 4, 3];
+/** How many bytes is required by given `Arguments`. */
+export const REQUIRED_BYTES = [<i32>0, 0, 0, 0, 1, 9, 1, 1, 1, 1, 1, 1, 2];
 
 // @unmanaged
 export class Args {
@@ -46,8 +48,6 @@ function twoImm(data: Uint8Array): Args {
   const second = decodeI32(data.subarray(split));
   return asArgs(first, second, 0, 0);
 }
-
-// TODO [ToDr] Validate enough bytes.
 
 export const DECODERS: ArgsDecoder[] = [
   // DECODERS[Arguments.Zero] =
@@ -86,7 +86,10 @@ export const DECODERS: ArgsDecoder[] = [
   // DECODERS[Arguments.OneRegOneImmOneOff] =
   (data: Uint8Array) => {
     const n = nibbles(data[0]);
-    return asArgs(n.low, decodeI32(data.subarray(1, 1 + n.hig)), decodeI32(data.subarray(1 + n.hig)), 0);
+    const split = n.hig + 1;
+    const immA = decodeI32(data.subarray(1, split))
+    const offs = decodeI32(data.subarray(split));
+    return asArgs(n.low, immA, offs, 0);
   },
   // DECODERS[Arguments.TwoReg] =
   (data: Uint8Array) => {

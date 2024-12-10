@@ -63,7 +63,7 @@ export function getAssembly(p: Program): string {
 
     const args = decodeArguments(iData.kind, p.code.subarray(i + 1, end));
     const argsArray = [args.a, args.b, args.c, args.d];
-    const relevantArgs = <i32>RELEVANT_ARGS[iData.kind];
+    const relevantArgs = RELEVANT_ARGS[iData.kind];
     for (let i = 0; i < relevantArgs; i++) {
       v += ` ${argsArray[i]}, `;
     }

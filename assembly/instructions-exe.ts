@@ -10,6 +10,7 @@ function u32SignExtend(v: u32): i64 {
   return i64(i32(v))
 }
 
+@inline
 function reg(v: u64): u32 {
   return v >= u64(NO_OF_REGISTERS) ? NO_OF_REGISTERS - 1 : u32(v);
 }
@@ -828,7 +829,6 @@ export const RUN: InstructionRun[] = [
   // SHAR_R
   (args, registers) => {
     const shift = u32(registers[reg(args.a)] % MAX_SHIFT_64);
-    // TODO [ToDr] this is most likley wrong
     registers[reg(args.c)] = i64(registers[reg(args.b)]) >> shift;
     return ok();
   },
