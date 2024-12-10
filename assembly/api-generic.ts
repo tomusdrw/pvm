@@ -88,6 +88,7 @@ export function runVm(input: VmInput, logs: boolean = false): VmOutput {
   let isOk = true;
   for (;;) {
     if (!isOk) {
+      if (logs) console.log(`REGISTERS = ${registers.join(", ")} (final)`);
       if (logs) console.log(`Finished with status: ${int.status}`);
       break;
     }

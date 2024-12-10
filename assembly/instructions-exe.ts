@@ -13,6 +13,10 @@ type InstructionRun = (args: Args, registers: Registers, memory: Memory) => Outc
 
 const INVALID: InstructionRun = () => panic();
 
+function u32SignExtend(v: u32): i64 {
+  return i64(i32(v))
+}
+
 export const RUN: InstructionRun[] = [
   // TRAP
   () => panic(),
@@ -43,7 +47,7 @@ export const RUN: InstructionRun[] = [
   // 20
   // LOAD_IMM_64
   (args, registers) => {
-    registers[args.a] = u64(args.b) + (u64(args.c) << 32);
+    registers[args.a] = u64(args.c) + (u64(args.b) << 32);
     return ok();
   },
   INVALID,
@@ -104,12 +108,12 @@ export const RUN: InstructionRun[] = [
   // 50
   // JUMP_IND
   (args, registers) => {
-    const address = u32(registers[args.a] + args.b);
+    const address = u32(registers[args.a] + u32SignExtend(args.b));
     return dJump(address);
   },
   // LOAD_IMM
   (args, registers) => {
-    registers[args.a] = args.b;
+    registers[args.a] = u32SignExtend(args.b);
     return ok();
   },
   // LOAD_U8
@@ -201,26 +205,25 @@ export const RUN: InstructionRun[] = [
   // 70
   // STORE_IMM_IND_U8
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.b);
+    const address = u32(registers[args.a] + u32SignExtend(args.b));
     const pageFault = memory.setU8(address, <u8>(args.c & 0xff));
-    console.log(`Wrote into ${address}`);
     return okOrFault(pageFault);
   },
   // STORE_IMM_IND_U16
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.b);
+    const address = u32(registers[args.a] + u32SignExtend(args.b));
     const pageFault = memory.setU16(address, <u16>(args.c & 0xff_ff));
     return okOrFault(pageFault);
   },
   // STORE_IMM_IND_U32
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.b);
+    const address = u32(registers[args.a] + u32SignExtend(args.b));
     const pageFault = memory.setU32(address, args.c);
     return okOrFault(pageFault);
   },
   // STORE_IMM_IND_U64
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.b);
+    const address = u32(registers[args.a] + u32SignExtend(args.b));
     const pageFault = memory.setU64(address, args.c);
     return okOrFault(pageFault);
   },
@@ -234,7 +237,7 @@ export const RUN: InstructionRun[] = [
   // 80
   // LOAD_IMM_JUMP
   (args, registers) => {
-    registers[args.a] = args.b;
+    registers[args.a] = u32SignExtend(args.b);
     return staticJump(args.c);
   },
   // BRANCH_EQ_IMM
@@ -281,21 +284,21 @@ export const RUN: InstructionRun[] = [
   },
   // BRANCH_LT_S_IMM
   (args, registers) => {
-    if (<i64>registers[args.a] < <i64>args.b) {
+    if (i64(registers[args.a]) < u32SignExtend(args.b)) {
       return staticJump(args.c);
     }
     return ok();
   },
   // BRANCH_LE_S_IMM
   (args, registers) => {
-    if (<i64>registers[args.a] <= <i64>args.b) {
+    if (i64(registers[args.a]) <= u32SignExtend(args.b)) {
       return staticJump(args.c);
     }
     return ok();
   },
   // BRANCH_GE_S_IMM
   (args, registers) => {
-    if (<i64>registers[args.a] >= <i64>args.b) {
+    if (i64(registers[args.a]) >= u32SignExtend(args.b)) {
       return staticJump(args.c);
     }
     return ok();
@@ -304,7 +307,7 @@ export const RUN: InstructionRun[] = [
   // 90
   // BRANCH_GT_S_IMM
   (args, registers) => {
-    if (<i64>registers[args.a] > <i64>args.b) {
+    if (i64(registers[args.a]) > u32SignExtend(args.b)) {
       return staticJump(args.c);
     }
     return ok();
@@ -342,31 +345,31 @@ export const RUN: InstructionRun[] = [
   // 110
   // STORE_IND_U8
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const fault = memory.setU8(address, <u8>(registers[args.b] & 0xff));
     return okOrFault(fault);
   },
   // STORE_IND_U16
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const fault = memory.setU16(address, <u16>(registers[args.b] & 0xff_ff));
     return okOrFault(fault);
   },
   // STORE_IND_U32
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const fault = memory.setU32(address, u32(registers[args.b]));
     return okOrFault(fault);
   },
   // STORE_IND_U64
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const fault = memory.setU64(address, registers[args.b]);
     return okOrFault(fault);
   },
   // LOAD_IND_U8
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const result = memory.getU8(address);
     if (!result.fault.isFault) {
       registers[args.b] = result.ok;
@@ -375,7 +378,7 @@ export const RUN: InstructionRun[] = [
   },
   // LOAD_IND_I8
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const result = memory.getI8(address);
     if (!result.fault.isFault) {
       registers[args.b] = result.ok;
@@ -384,7 +387,7 @@ export const RUN: InstructionRun[] = [
   },
   // LOAD_IND_U16
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const result = memory.getU16(address);
     if (!result.fault.isFault) {
       registers[args.b] = result.ok;
@@ -393,7 +396,7 @@ export const RUN: InstructionRun[] = [
   },
   // LOAD_IND_I16
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const result = memory.getI16(address);
     if (!result.fault.isFault) {
       registers[args.b] = result.ok;
@@ -402,7 +405,7 @@ export const RUN: InstructionRun[] = [
   },
   // LOAD_IND_U32
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const result = memory.getU32(u32(address));
     if (!result.fault.isFault) {
       registers[args.b] = result.ok;
@@ -411,7 +414,7 @@ export const RUN: InstructionRun[] = [
   },
   // LOAD_IND_I32
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const result = memory.getI32(u32(address));
     if (!result.fault.isFault) {
       registers[args.b] = result.ok;
@@ -422,7 +425,7 @@ export const RUN: InstructionRun[] = [
   // 120
   // LOAD_IND_U64
   (args, registers, memory) => {
-    const address = u32(registers[args.a] + args.c);
+    const address = u32(registers[args.a] + u32SignExtend(args.c));
     const result = memory.getU64(u32(address));
     if (!result.fault.isFault) {
       registers[args.b] = result.ok;
@@ -431,27 +434,27 @@ export const RUN: InstructionRun[] = [
   },
   // ADD_IMM_32
   (args, registers) => {
-    registers[args.b] = i64(u32(registers[args.a] + args.c));
+    registers[args.b] = u32SignExtend(u32(registers[args.a] + u32SignExtend(args.c)));
     return ok();
   },
   // AND_IMM
   (args, registers) => {
-    registers[args.b] = registers[args.a] & args.c;
+    registers[args.b] = registers[args.a] & u32SignExtend(args.c);
     return ok();
   },
   // XOR_IMM
   (args, registers) => {
-    registers[args.b] = registers[args.a] ^ args.c;
+    registers[args.b] = registers[args.a] ^ u32SignExtend(args.c);
     return ok();
   },
   // OR_IMM
   (args, registers) => {
-    registers[args.b] = registers[args.a] | args.c;
+    registers[args.b] = registers[args.a] | u32SignExtend(args.c);
     return ok();
   },
   // MUL_IMM_32
   (args, registers) => {
-    registers[args.b] = i64(u32(registers[args.a] * args.c));
+    registers[args.b] = u32SignExtend(u32(registers[args.a] * args.c));
     return ok();
   },
   // SET_LT_U_IMM
@@ -461,19 +464,19 @@ export const RUN: InstructionRun[] = [
   },
   // SET_LT_S_IMM
   (args, registers) => {
-    registers[args.b] = i64(registers[args.a]) < i64(args.c) ? 1 : 0;
+    registers[args.b] = i64(registers[args.a]) < u32SignExtend(args.c) ? 1 : 0;
     return ok();
   },
   // SHLO_L_IMM_32
   (args, registers) => {
     const shift = u32(args.c % MAX_SHIFT_32);
-    registers[args.b] = i64(u32(registers[args.a]) << shift);
+    registers[args.b] = u32SignExtend(u32(registers[args.a]) << shift);
     return ok();
   },
   // SHLO_R_IMM_32
   (args, registers) => {
     const shift = u32(args.c % MAX_SHIFT_32);
-    registers[args.b] = i64(u32(registers[args.a]) >>> shift);
+    registers[args.b] = u32SignExtend(u32(registers[args.a]) >>> shift);
     return ok();
   },
 
@@ -481,13 +484,13 @@ export const RUN: InstructionRun[] = [
   // SHAR_R_IMM_32
   (args, registers) => {
     const shift = u32(args.c % MAX_SHIFT_32);
-    registers[args.b] = i64(u32(registers[args.a])) >> shift;
+    registers[args.b] = u32SignExtend(u32(registers[args.a])) >> shift;
     return ok();
   },
   // NEG_ADD_IMM_32
   (args, registers) => {
     const sum = (u64(args.c) | 0x1_0000_0000) - registers[args.a];
-    registers[args.b] = i64(u32(sum));
+    registers[args.b] = u32SignExtend(u32(sum));
     return ok();
   },
   // SET_GT_U_IMM
@@ -497,25 +500,26 @@ export const RUN: InstructionRun[] = [
   },
   // SET_GT_S_IMM
   (args, registers) => {
-    registers[args.b] = <i64>registers[args.a] > <i64>args.c ? 1 : 0;
+    registers[args.b] = i64(registers[args.a]) > u32SignExtend(args.c) ? 1 : 0;
     return ok();
   },
   // SHLO_L_IMM_ALT_32
   (args, registers) => {
     const shift = u32(registers[args.a] % MAX_SHIFT_32);
-    registers[args.b] = i64(u32(args.c << shift));
+    registers[args.b] = u32SignExtend(args.c << shift);
     return ok();
   },
   // SHLO_R_IMM_ALT_32
   (args, registers) => {
     const shift = u32(registers[args.a] % MAX_SHIFT_32);
-    registers[args.b] = i64(u32(args.c >>> shift));
+    registers[args.b] = u32SignExtend(args.c >>> shift);
     return ok();
   },
   // SHAR_R_IMM_ALT_32
   (args, registers) => {
     const shift = u32(registers[args.a] % MAX_SHIFT_32);
-    registers[args.b] = i64(u32(i64(args.c) >> shift));
+    const imm = u32SignExtend(args.c);
+    registers[args.b] = u32SignExtend(u32(imm >> shift));
     return ok();
   },
   // CMOV_IZ_IMM
@@ -560,6 +564,7 @@ export const RUN: InstructionRun[] = [
   // SHAR_R_IMM
   (args, registers) => {
     const shift = u32(args.c % MAX_SHIFT_64);
+    // TODO [ToDr] Extend?
     registers[args.b] = i64(registers[args.a]) >> shift;
     return ok();
   },
@@ -614,7 +619,7 @@ export const RUN: InstructionRun[] = [
   },
   // BRANCH_LT_S
   (args, registers) => {
-    if (<i64>registers[args.b] < <i64>registers[args.a]) {
+    if (i64(registers[args.b]) < i64(registers[args.a])) {
       return staticJump(args.c);
     }
     return ok();
@@ -628,7 +633,7 @@ export const RUN: InstructionRun[] = [
   },
   // BRANCH_GE_S
   (args, registers) => {
-    if (<i64>registers[args.b] >= <i64>registers[args.a]) {
+    if (i64(registers[args.b]) >= i64(registers[args.a])) {
       return staticJump(args.c);
     }
     return ok();
@@ -641,8 +646,8 @@ export const RUN: InstructionRun[] = [
   // 160
   // LOAD_IMM_JUMP_IND
   (args, registers) => {
-    registers[args.a] = args.c;
-    const address = u32(registers[args.b] + args.d);
+    const address = u32(registers[args.a] + u32SignExtend(args.d));
+    registers[args.b] = u32SignExtend(args.c);
     return dJump(address);
   },
   INVALID,
@@ -663,7 +668,7 @@ export const RUN: InstructionRun[] = [
   },
   // SUB_32
   (args, registers) => {
-    registers[args.c] = i64(
+    registers[args.c] = u32SignExtend(
       u32(
         registers[args.b] + 2**32 - u32(registers[args.a])
       )
@@ -678,31 +683,31 @@ export const RUN: InstructionRun[] = [
   // DIV_U_32
   (args, registers) => {
     if (u32(registers[args.a]) === 0) {
-      registers[args.c] = i64.MAX_VALUE;
+      registers[args.c] = u64.MAX_VALUE;
     } else {
-      registers[args.c] = u32(registers[args.b]) / u32(registers[args.a]);
+      registers[args.c] = u32SignExtend(u32(registers[args.b]) / u32(registers[args.a]));
     }
     return ok();
   },
   // DIV_S_32
   (args, registers) => {
-    const b = i64(registers[args.b]);
-    const a = i64(registers[args.a]);
+    const b = u32SignExtend(u32(registers[args.b]));
+    const a = u32SignExtend(u32(registers[args.a]));
     if (a === 0) {
-      registers[args.c] = i64.MAX_VALUE;
+      registers[args.c] = u64.MAX_VALUE;
     } else if (a === -1 && b === i32.MIN_VALUE) {
       registers[args.c] = b;
     } else {
-      registers[args.c] = i64(u32(b)) / i64(u32(a));
+      registers[args.c] = u32SignExtend(u32(b)) / u32SignExtend(u32(a));
     }
     return ok();
   },
   // REM_U_32
   (args, registers) => {
     if (u32(registers[args.a]) === 0) {
-      registers[args.c] = i64(u32(registers[args.b]));
+      registers[args.c] = u32SignExtend(u32(registers[args.b]));
     } else {
-      registers[args.c] = i64(u32(registers[args.b]) % u32(registers[args.a]));
+      registers[args.c] = u32SignExtend(u32(registers[args.b]) % u32(registers[args.a]));
     }
     return ok();
   },
@@ -722,24 +727,25 @@ export const RUN: InstructionRun[] = [
   // SHLO_L_32
   (args, registers) => {
     const shift = u32(registers[args.a] % MAX_SHIFT_32);
-    registers[args.c] = i64(u32(registers[args.b]) << shift);
+    registers[args.c] = u32SignExtend(u32(registers[args.b]) << shift);
     return ok();
   },
   // SHLO_R_32
   (args, registers) => {
     const shift = u32(registers[args.a] % MAX_SHIFT_32);
-    registers[args.c] = i64(u32(registers[args.b]) >>> shift);
+    registers[args.c] = u32SignExtend(u32(registers[args.b]) >>> shift);
     return ok();
   },
   // SHAR_R_32
   (args, registers) => {
     const shift = u32(registers[args.a] % MAX_SHIFT_32);
-    registers[args.c] = i64(u32(registers[args.b])) >> shift;
+    const regValue = u32SignExtend(u32(registers[args.b]));
+    registers[args.c] = u32SignExtend(u32(regValue >> shift));
     return ok();
   },
 
   // 180
-  // ADD
+  // ADD_64
   (args, registers) => {
     registers[args.c] = registers[args.a] + registers[args.b];
     return ok();
@@ -813,6 +819,7 @@ export const RUN: InstructionRun[] = [
   // SHAR_R
   (args, registers) => {
     const shift = u32(registers[args.a] % MAX_SHIFT_64);
+    // TODO [ToDr] this is most likley wrong
     registers[args.c] = i64(registers[args.b]) >> shift;
     return ok();
   },

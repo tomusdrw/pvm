@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
+import "json-bigint-patch";
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import * as assert from 'node:assert';
 
-import { runVm } from "../build/release.js";
+import { runVm, InputKind, disassemble } from "../build/release.js";
 
 function read(data, field) {
   if (field in data) {
@@ -37,6 +38,13 @@ function processJson(data, debug = false) {
     memory: asChunks(read(data, 'expected-memory')),
     gas: BigInt(read(data, 'expected-gas')),
   };
+
+  if (debug) {
+    const assembly = disassemble(input.program, InputKind.Generic);
+    console.info('===========');
+    console.info(assembly);
+      console.info('\n^^^^^^^^^^^\n');
+  }
 
   const result = runVm(input, debug);
   result.status = statusAsString(result.status);
