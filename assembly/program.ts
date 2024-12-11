@@ -198,7 +198,7 @@ export class Program {
 
 export function decodeArguments(kind: Arguments, data: Uint8Array): Args {
   if (data.length < REQUIRED_BYTES[kind]) {
-    return new Args;
+    return new Args();
   }
   return DECODERS[kind](data);
 }

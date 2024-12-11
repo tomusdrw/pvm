@@ -7,10 +7,10 @@ import { NO_OF_REGISTERS, Registers } from "./registers";
 type InstructionRun = (args: Args, registers: Registers, memory: Memory) => OutcomeData;
 
 function u32SignExtend(v: u32): i64 {
-  return i64(i32(v))
+  return i64(i32(v));
 }
 
-@inline
+// @inline
 function reg(v: u64): u32 {
   return v >= u64(NO_OF_REGISTERS) ? NO_OF_REGISTERS - 1 : u32(v);
 }
@@ -438,7 +438,7 @@ export const RUN: InstructionRun[] = [
   // ADD_IMM_32
   (args, registers) => {
     const a = registers[reg(args.a)];
-    const c = u32SignExtend(args.c)
+    const c = u32SignExtend(args.c);
     registers[reg(args.b)] = u32SignExtend(u32(a + c));
     return ok();
   },
@@ -667,23 +667,17 @@ export const RUN: InstructionRun[] = [
   // 170
   // ADD_32
   (args, registers) => {
-    registers[reg(args.c)] = u32SignExtend(
-      u32(registers[reg(args.a)]) + u32(registers[reg(args.b)])
-    );
+    registers[reg(args.c)] = u32SignExtend(u32(registers[reg(args.a)]) + u32(registers[reg(args.b)]));
     return ok();
   },
   // SUB_32
   (args, registers) => {
-    registers[reg(args.c)] = u32SignExtend(u32(
-      registers[reg(args.b)] + 2**32 - u32(registers[reg(args.a)])
-    ));
+    registers[reg(args.c)] = u32SignExtend(u32(registers[reg(args.b)] + 2 ** 32 - u32(registers[reg(args.a)])));
     return ok();
   },
   // MUL_32
   (args, registers) => {
-    registers[reg(args.c)] = u32SignExtend(u32(
-      registers[reg(args.a)] * registers[reg(args.b)]
-    ));
+    registers[reg(args.c)] = u32SignExtend(u32(registers[reg(args.a)] * registers[reg(args.b)]));
     return ok();
   },
   // DIV_U_32

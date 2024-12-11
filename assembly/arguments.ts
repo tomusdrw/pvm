@@ -87,7 +87,7 @@ export const DECODERS: ArgsDecoder[] = [
   (data: Uint8Array) => {
     const n = nibbles(data[0]);
     const split = n.hig + 1;
-    const immA = decodeI32(data.subarray(1, split))
+    const immA = decodeI32(data.subarray(1, split));
     const offs = decodeI32(data.subarray(split));
     return asArgs(n.low, immA, offs, 0);
   },
