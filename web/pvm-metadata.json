@@ -6,5 +6,6 @@
     "resetGeneric": true,
     "resetPolkaVM": false
   },
-  "wasmBlobUrl": "./build/release.wasm"
+  "wasmBlobUrl": "./build/release.wasm",
+  "wasmBlobUrl32": "./32bit/release.wasm"
 }
